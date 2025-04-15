@@ -44,7 +44,6 @@ public class ReadingRecordService {
                 .collect(Collectors.toList());
     }
 
-
     //전체 조회
     public List<ReadingRecord> getAllRecords() {
         return repository.findAll();
@@ -68,7 +67,13 @@ public class ReadingRecordService {
     }
 
     //삭제
-    public void deleteRecord(long id) {
+    public String deleteRecord(long id) {
+        // 삭제하려는 행의 존재 여부 확인
+        ReadingRecord record = repository.findById(id)
+                .orElseThrow(()-> new IllegalArgumentException("해당 ID의 기록이 없습니다."));
+        // 삭제
         repository.deleteById(id);
+        // 삭제 완료 메시지
+        return "삭제가 완료되었습니다.";
     }
 }

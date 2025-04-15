@@ -6,6 +6,7 @@ import me.dodo.readingnotes.dto.ReadingRecordRequest;
 import me.dodo.readingnotes.dto.ReadingRecordResponse;
 import me.dodo.readingnotes.service.ReadingRecordService;
 import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -70,6 +71,7 @@ public class ReadingRecordController {
         }
     }
 
+    // 전부 조회
     @GetMapping
     public List<ReadingRecordResponse> getAllRecords() {
         return service.getAllRecords().stream()
@@ -77,6 +79,7 @@ public class ReadingRecordController {
                 .collect(Collectors.toList());
     }
 
+    // ID로 조회
     @GetMapping("/{id}")
     public ReadingRecordResponse getRecordById(@PathVariable Long id) {
         ReadingRecord r = service.getRecord(id);
@@ -86,6 +89,7 @@ public class ReadingRecordController {
         );
     }
 
+    // title, author, date로 조회
     @GetMapping("/search")
     public List<ReadingRecordResponse> searchRecords(
             @RequestParam(required = false) String title,
@@ -95,8 +99,17 @@ public class ReadingRecordController {
         return service.searchRecords(title, author, date);
     }
 
+    // 수정
     @PutMapping("/{id}")
     public ReadingRecordResponse update(@PathVariable Long id, @RequestBody ReadingRecordRequest request){
         return service.update(id, request);
+    }
+
+    //삭제
+    @DeleteMapping("/{id}")
+    public ResponseEntity<String> deleteRecord(@PathVariable Long id){
+        String message = service.deleteRecord(id);
+
+        return ResponseEntity.ok(message);
     }
 }
