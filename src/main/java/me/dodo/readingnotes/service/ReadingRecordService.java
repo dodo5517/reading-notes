@@ -7,7 +7,9 @@ import me.dodo.readingnotes.repository.ReadingRecordRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 public class ReadingRecordService {
@@ -28,6 +30,20 @@ public class ReadingRecordService {
     public ReadingRecord getRecord(long id) {
         return repository.findById(id).orElse(null);
     }
+
+    //title, author, date로 조회
+    public List<ReadingRecordResponse> searchRecords(String title, String author, LocalDate date){
+        List<ReadingRecord> results = repository.findAll().stream()
+                .filter(r -> title == null || r.getTitle().contains(title))
+                .filter(r -> author == null || r.getAuthor().contains(author))
+                .filter(r -> date == null || r.getDate().isEqual(date))
+                .collect(Collectors.toList());
+
+        return results.stream()
+                .map(ReadingRecordResponse::new)
+                .collect(Collectors.toList());
+    }
+
 
     //전체 조회
     public List<ReadingRecord> getAllRecords() {
