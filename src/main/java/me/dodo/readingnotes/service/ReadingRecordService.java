@@ -9,7 +9,6 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
-import java.util.NoSuchElementException;
 import java.util.stream.Collectors;
 
 @Service
@@ -29,7 +28,7 @@ public class ReadingRecordService {
 
     //ID로 조회
     public ReadingRecord getRecord(long id) {
-        return repository.findById(id).orElseThrow(()->new NoSuchElementException("해당 ID의 기록이 존재하지 않습니다."));
+        return repository.findById(id).orElse(null);
     }
 
     //title, author, date로 조회
