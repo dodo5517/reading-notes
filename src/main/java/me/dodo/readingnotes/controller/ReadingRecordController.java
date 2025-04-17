@@ -1,6 +1,7 @@
 package me.dodo.readingnotes.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import me.dodo.readingnotes.common.ApiResponse;
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.dto.ReadingRecordRequest;
 import me.dodo.readingnotes.dto.ReadingRecordResponse;
@@ -9,7 +10,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.databind.ObjectMapper;
+
 
 import java.time.LocalDate;
 import java.util.List;
@@ -46,7 +47,7 @@ public class ReadingRecordController {
 //    }
     // author 없이 post하는 경우
     @PostMapping
-    public ReadingRecordResponse saveRecord(@RequestBody String rawJson){
+    public ApiResponse<ReadingRecordResponse> saveRecord(@RequestBody String rawJson){
         System.out.println("📩 원본 요청:\n" + rawJson);
         try{
 
@@ -64,7 +65,7 @@ public class ReadingRecordController {
            );
 
            ReadingRecord saved = service.saveRecord(record);
-           return new ReadingRecordResponse(saved);
+           return new ApiResponse<>(new ReadingRecordResponse(saved));
 
         } catch (Exception e) {
             throw new RuntimeException("JSON 파싱 실패: "+ e.getMessage());
@@ -73,30 +74,28 @@ public class ReadingRecordController {
 
     // 전부 조회
     @GetMapping
-    public List<ReadingRecordResponse> getAllRecords() {
-        return service.getAllRecords().stream()
-                .map(r->new ReadingRecordResponse( r.getId(), r.getTitle(), r.getAuthor(), r.getDate(), r.getSentence(), r.getComment()))
+    public ApiResponse<List<ReadingRecordResponse>> getAllRecords() {
+        List<ReadingRecordResponse> result = service.getAllRecords().stream()
+                .map(ReadingRecordResponse::new)
                 .collect(Collectors.toList());
+        return new ApiResponse<>(result);
     }
 
     // ID로 조회
     @GetMapping("/{id}")
-    public ReadingRecordResponse getRecordById(@PathVariable Long id) {
+    public ApiResponse<ReadingRecordResponse> getRecordById(@PathVariable Long id) {
         ReadingRecord r = service.getRecord(id);
-        return new ReadingRecordResponse(
-                r.getId(), r.getTitle(), r.getAuthor(),
-                r.getDate(), r.getSentence(), r.getComment()
-        );
+        return new ApiResponse<>(new ReadingRecordResponse(r));
     }
 
     // title, author, date로 조회
     @GetMapping("/search")
-    public List<ReadingRecordResponse> searchRecords(
+    public ApiResponse<List<ReadingRecordResponse>> searchRecords(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
             ){
-        return service.searchRecords(title, author, date);
+        return new ApiResponse<>(service.searchRecords(title, author, date));
     }
 
     // 수정
