@@ -32,17 +32,27 @@ public class ReadingRecordService {
     }
 
     //title, author, date로 조회
-    public List<ReadingRecordResponse> searchRecords(String title, String author, LocalDate date){
-        List<ReadingRecord> results = repository.findAll().stream()
-                .filter(r -> title == null || r.getTitle().contains(title))
-                .filter(r -> author == null || r.getAuthor().contains(author))
-                .filter(r -> date == null || r.getDate().isEqual(date))
-                .collect(Collectors.toList());
+    public List<ReadingRecordResponse> searchRecords(String title, String author, LocalDate date, String sort, String order) {
+        return repository.findAll().stream()
+                .filter(r -> (title == null || r.getTitle().contains(title)))
+                .filter(r -> (author == null || r.getAuthor().contains(author)))
+                .filter(r -> (date == null || r.getDate().equals(date)))
+                .sorted((r1, r2) -> {
+                    int compareResult = 0;
+                    if ("title".equalsIgnoreCase(sort)) {
+                        compareResult = r1.getTitle().compareToIgnoreCase(r2.getTitle());
+                    } else if ("author".equalsIgnoreCase(sort)) {
+                        compareResult = r1.getAuthor().compareToIgnoreCase(r2.getAuthor());
+                    } else if ("date".equalsIgnoreCase(sort)) {
+                        compareResult = r1.getDate().compareTo(r2.getDate());
+                    }
 
-        return results.stream()
-                .map(ReadingRecordResponse::new)
+                    return "desc".equalsIgnoreCase(order) ? -compareResult : compareResult;
+                })
+                .map(ReadingRecordResponse::new) // ReadingRecord를 ReadingRecordResponse로 변환
                 .collect(Collectors.toList());
     }
+
 
     //전체 조회
     public List<ReadingRecord> getAllRecords() {

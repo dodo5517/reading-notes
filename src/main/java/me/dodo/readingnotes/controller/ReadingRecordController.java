@@ -94,9 +94,11 @@ public class ReadingRecordController {
     public List<ReadingRecordResponse> searchRecords(
             @RequestParam(required = false) String title,
             @RequestParam(required = false) String author,
-            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate date,
+            @RequestParam(required = false, defaultValue = "date") String sort,
+            @RequestParam(required = false, defaultValue = "desc") String order
     ){
-        return service.searchRecords(title, author, date);
+        return service.searchRecords(title, author, date, sort, order);
     }
 
     // 수정
