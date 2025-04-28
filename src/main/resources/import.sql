@@ -1,0 +1,3 @@
+INSERT INTO reading_record (title, author, date, sentence, comment) VALUES ('자바의 정석', '남궁성', '2025-04-18', '자바는 객체지향 언어다.', '기본기가 탄탄한 책이다.');
+INSERT INTO reading_record (title, author, date, sentence, comment) VALUES ('토비의 스프링', '이일민', '2025-04-19', '스프링은 자바를 확장하는 방법론이다.', '스프링을 제대로 이해할 수 있다.');
+INSERT INTO reading_record (title, author, date, sentence, comment) VALUES ('Effective Java', '조슈아 블로크', '2025-04-20', '불변 객체를 만들자.', '모범 사례를 배울 수 있다.');
