@@ -1,41 +1,28 @@
 package me.dodo.readingnotes.domain;
 
 import jakarta.persistence.*;
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 @Entity //이 클래스가 JPA 엔티티임을 선언. DB 테이블과 매핑됨
 @Table(name = "reading_record") //DB에서 이 엔티티가 매핑될 테이블 이름을 지정함
 public class ReadingRecord {
 
-    @Id //이 필드(id)가 **기본 키(PK)**임을 나타냄
-    //기본 키의 값을 DB가 **자동 증가(Auto Increment)**로 생성하도록 지정함
+    @Id //이 필드(id)가 기본 키임을 나타냄
+    //기본 키의 값을 DB가 자동 증가(Auto Increment)로 생성하도록 지정함
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    private String title;
-    private String author;
-    private LocalDate date;
+
+    // 관계
+    @ManyToOne(fetch = FetchType.LAZY) // 다(기록):1(책) 설정
+    @JoinColumn(name= "book_id") // 외래 키로 book 테이블의 id를 참조함.
+    private Book book;
+
+    private LocalDateTime date;
     private String sentence;
     private String comment;
 
     // 기본 생성자 (JPA 필수)
     public ReadingRecord() {
-    }
-
-    // author 없이 만들 때 사용 (POST)
-    public ReadingRecord(String title, LocalDate date, String sentence, String comment) {
-        this.title = title;
-        this.date = date;
-        this.sentence = sentence;
-        this.comment = comment;
-    }
-
-    // 전체 필드 생성자 author 포함해서 만들거나 수정할 때 사용 (PUT)
-    public ReadingRecord(String title, String author, LocalDate date, String sentence, String comment) {
-        this.title = title;
-        this.author = "Unknown";
-        this.date = date;
-        this.sentence = sentence;
-        this.comment = comment;
     }
 
     // Getter / Setter
@@ -46,24 +33,17 @@ public class ReadingRecord {
         this.id = id;
     }
 
-    public String getTitle() {
-        return title;
+    public Book getBook() {
+        return book;
     }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setBook(Book book) {
+        this.book = book;
     }
 
-    public LocalDate getDate() {
+    public LocalDateTime getDate() {
         return date;
     }
-    public void setDate(LocalDate date) {
+    public void setDate(LocalDateTime date) {
         this.date = date;
     }
 
