@@ -1,10 +1,7 @@
 package me.dodo.readingnotes.controller;
 
 import jakarta.validation.Valid;
-import me.dodo.readingnotes.dto.LoginRequest;
-import me.dodo.readingnotes.dto.LoginResponse;
-import me.dodo.readingnotes.dto.UserRequest;
-import me.dodo.readingnotes.dto.UserResponse;
+import me.dodo.readingnotes.dto.*;
 import me.dodo.readingnotes.service.UserService;
 import me.dodo.readingnotes.domain.User;
 import org.slf4j.Logger; // java.util.logging.Logger 보다 세부 설정 가능.
@@ -41,9 +38,9 @@ public class UserController {
     public LoginResponse loginUser(@RequestBody @Valid LoginRequest request){
         log.debug("로그인 요청(request): {}", request.toString());
 
-        User user = userService.loginUser(request.getEmail(), request.getPassword());
+        LoginResult loginResult = userService.loginUser(request.getEmail(), request.getPassword());
 
-        return new LoginResponse("로그인 성공", new UserResponse(user));
+        return new LoginResponse("로그인 성공", new UserResponse(loginResult.getUser()), loginResult.getAccessToken(), loginResult.getRefreshToken());
     }
 
     // 특정 유저 조희

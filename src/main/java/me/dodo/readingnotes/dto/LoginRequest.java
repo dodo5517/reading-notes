@@ -8,7 +8,6 @@ public class LoginRequest {
     public String toString() {
         return "User{" +
                 "email='" + email + '\'' +
-                ", password='" + password + '\'' +
                 '}';
     }
 

@@ -32,6 +32,9 @@ public class User {
     @Column(name = "api_key", nullable = false, unique = true, length = 100)
     private String apiKey; // api_key, 모두 있어야 함
 
+    @Column(name = "refresh_token", length = 500)
+    private String refreshToken; // 토큰
+    
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl; // 프로필 사진
 
@@ -113,6 +116,11 @@ public class User {
     public void setApiKey(String apiKey) {
         this.apiKey = apiKey;
     }
+
+    public String getRefreshToken() {
+        return refreshToken;
+    }
+    public void setRefreshToken(String refreshToken) { this.refreshToken = refreshToken; }
 
     public String getProfileImageUrl() {
         return profileImageUrl;

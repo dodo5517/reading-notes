@@ -1,7 +1,11 @@
 package me.dodo.readingnotes.service;
 
 // jakarta.transaction.Transactional 보다 밑에가 spring framework 전용으로 연동 잘 됨.
+import me.dodo.readingnotes.dto.LoginResponse;
+import me.dodo.readingnotes.dto.LoginResult;
+import me.dodo.readingnotes.dto.UserResponse;
 import me.dodo.readingnotes.util.ApiKeyGenerator;
+import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -19,10 +23,13 @@ public class UserService {
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) { this.userRepository = userRepository;
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider) {
+        this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     // 유저 회원가입
@@ -51,7 +58,8 @@ public class UserService {
     }
 
     // 유저 로그인(필요한 최소 정보만 따로 받음)
-    public User loginUser(String email, String password) {
+    @Transactional // 트랜젝션 처리
+    public LoginResult loginUser(String email, String password) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
@@ -61,9 +69,15 @@ public class UserService {
         if(!passwordEncoder.matches(password,user.getPassword())){ // 평문 비교가 아닌 해시 비교
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
         }
-
         log.info("로그인 성공");
-        return user;
+
+        // 토큰 발급
+        String accessToken = jwtTokenProvider.createAccessToken(email);
+        String refreshToken = jwtTokenProvider.createRefreshToken();
+
+        log.info("accessToken: {}", accessToken.substring(0,4));
+        log.info("refreshToken: {}", refreshToken.substring(0,4));
+        return new LoginResult(user, accessToken, refreshToken);
     }
 
     // 전체 유저 조회
