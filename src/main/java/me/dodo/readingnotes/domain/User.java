@@ -7,7 +7,7 @@ import org.hibernate.annotations.UpdateTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
-@Table(name= "user")
+@Table(name= "users")
 public class User {
 
     @Id
@@ -38,6 +38,9 @@ public class User {
     @Column(name = "is_deleted", nullable = false)
     private Boolean isDeleted = false; // 탈퇴 여부, 기본값 = false
 
+    @Column(nullable = false, length = 20)
+    private String role = "USER"; // 역할(권한)
+
     @CreationTimestamp // 엔티티 인스턴스가 생성될 때 자동으로 현재 시간 입력
     @Column(name = "created_at", nullable = false, updatable = false)
     private LocalDateTime createdAt; // 생성된 시간
@@ -50,6 +53,16 @@ public class User {
     // 기본 생성자(JPA 필수)
     public User(){
     }
+
+    @Override // toString 예쁘게 보기 위해 오버라이딩
+    public String toString() {
+        return "User{" +
+                "email='" + email + '\'' +
+                ", username='" + username + '\'' +
+                ", password='" + password + '\'' +
+                '}';
+    }
+
 
     // Getter / Setter
     public Long getId() {
@@ -114,6 +127,9 @@ public class User {
     public void setIsDeleted(Boolean isDeleted) {
         this.isDeleted = isDeleted;
     }
+
+    public String getRole() { return role; }
+    public void setRole(String role) { this.role = role; }
 
     public LocalDateTime getCreatedAt() {
         return createdAt;
