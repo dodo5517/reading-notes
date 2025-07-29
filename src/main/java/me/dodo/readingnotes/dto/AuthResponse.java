@@ -1,12 +1,12 @@
 package me.dodo.readingnotes.dto;
 
-public class LoginResponse {
-    private String message;
-    private UserResponse user;
-    private String accessToken;
-    private String refreshToken;
+public class AuthResponse {
+    private final String message;
+    private final UserResponse user;
+    private final String accessToken;
+    private final String refreshToken;
 
-    public LoginResponse(String message, UserResponse user, String accessToken, String refreshToken) {
+    public AuthResponse(String message, UserResponse user, String accessToken, String refreshToken) {
         this.message = message;
         this.user = user;
         this.accessToken = accessToken;

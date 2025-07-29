@@ -2,12 +2,12 @@ package me.dodo.readingnotes.dto;
 
 import me.dodo.readingnotes.domain.User;
 
-public class LoginResult {
+public class AuthResult {
     private User user;
     private String accessToken;
     private String refreshToken;
 
-    public LoginResult(User user, String accessToken, String refreshToken) {
+    public AuthResult(User user, String accessToken, String refreshToken) {
         this.user = user;
         this.accessToken = accessToken;
         this.refreshToken = refreshToken;

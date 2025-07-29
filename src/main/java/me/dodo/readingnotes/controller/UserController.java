@@ -33,16 +33,6 @@ public class UserController {
         return new UserResponse(savedUser);
     }
 
-    // 일반 로그인
-    @PostMapping("/login")
-    public LoginResponse loginUser(@RequestBody @Valid LoginRequest request){
-        log.debug("로그인 요청(request): {}", request.toString());
-
-        LoginResult loginResult = userService.loginUser(request.getEmail(), request.getPassword());
-
-        return new LoginResponse("로그인 성공", new UserResponse(loginResult.getUser()), loginResult.getAccessToken(), loginResult.getRefreshToken());
-    }
-
     // 특정 유저 조희
     @GetMapping("/{id}")
     public UserResponse getUser(@PathVariable Long id){

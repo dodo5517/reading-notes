@@ -1,8 +1,6 @@
 package me.dodo.readingnotes.service;
 
 // jakarta.transaction.Transactional 보다 밑에가 spring framework 전용으로 연동 잘 됨.
-import me.dodo.readingnotes.domain.RefreshToken;
-import me.dodo.readingnotes.dto.LoginResult;
 import me.dodo.readingnotes.repository.RefreshTokenRepository;
 import me.dodo.readingnotes.util.ApiKeyGenerator;
 import me.dodo.readingnotes.util.JwtTokenProvider;
@@ -15,8 +13,7 @@ import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.time.ZoneId;
-import java.util.Date;
+
 import java.util.List;
 
 @Service
@@ -25,15 +22,11 @@ public class UserService {
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final PasswordEncoder passwordEncoder;
-    private final JwtTokenProvider jwtTokenProvider;
-    private final RefreshTokenRepository refreshTokenRepository;
 
     @Autowired
     public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenRepository refreshTokenRepositorys, RefreshTokenRepository refreshTokenRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
-        this.jwtTokenProvider = jwtTokenProvider;
-        this.refreshTokenRepository = refreshTokenRepository;
     }
 
     // 유저 회원가입
@@ -59,43 +52,6 @@ public class UserService {
         }
 
         return userRepository.save(user);
-    }
-
-    // 유저 로그인(필요한 최소 정보만 따로 받음)
-    @Transactional // 트랜젝션 처리
-    public LoginResult loginUser(String email, String password) {
-        User user = userRepository.findByEmail(email)
-                .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
-
-        if(user.getIsDeleted()){
-            throw new IllegalArgumentException("탈퇴한 계정입니다.");
-        }
-        if(!passwordEncoder.matches(password,user.getPassword())){ // 평문 비교가 아닌 해시 비교
-            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
-        }
-        log.info("로그인 성공");
-
-        // 토큰 생성
-        String accessToken = jwtTokenProvider.createAccessToken(email);
-        String refreshToken = jwtTokenProvider.createRefreshToken();
-        log.info("accessToken: {}", accessToken.substring(0,4));
-        
-        // refresh 토큰 만료 시간
-        Date refreshExpiry = jwtTokenProvider.getExpirationDate(refreshToken); 
-
-        // refresh 토큰 저장
-        RefreshToken tokenEntity = new RefreshToken();
-        tokenEntity.setUser(user);
-        tokenEntity.setToken(refreshToken);
-        // Date 타입을 LocalDateTime으로 변환
-        tokenEntity.setExpiryDate(refreshExpiry.toInstant()
-                        .atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime());
-        // 무슨 device인지 request에서 가져와야 함.
-        tokenEntity.setDeviceInfo("Chrom");
-        refreshTokenRepository.save(tokenEntity);
-        log.info("refreshToken: {}", tokenEntity.getToken().substring(0,4));
-
-        return new LoginResult(user, accessToken, refreshToken);
     }
 
     // 전체 유저 조회
