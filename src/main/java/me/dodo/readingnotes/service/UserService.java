@@ -4,6 +4,7 @@ package me.dodo.readingnotes.service;
 import me.dodo.readingnotes.util.ApiKeyGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
 import me.dodo.readingnotes.domain.User;
 import me.dodo.readingnotes.repository.UserRepository;
@@ -17,19 +18,26 @@ public class UserService {
 
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
+    private final PasswordEncoder passwordEncoder;
 
     @Autowired
-    public UserService(UserRepository userRepository) { this.userRepository = userRepository; }
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) { this.userRepository = userRepository;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     // 유저 저장
     @Transactional // 트랜젝션 처리
-    public User saveUser(User user) {
+    public User registerUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())){
             throw new IllegalArgumentException("이미 사용 중인 이메일입니다.");
         }
         if (userRepository.existsByUsername(user.getUsername())) {
             throw new IllegalArgumentException("이미 사용 중인 이름입니다.");
         }
+
+        // 비밀번호 암호화(해싱)
+        String encodedPw = passwordEncoder.encode(user.getPassword());
+        user.setPassword(encodedPw);
 
         // api_key
         user.setApiKey(ApiKeyGenerator.generate()); // api_key 생성
@@ -55,7 +63,7 @@ public class UserService {
     // 유저 삭제
     public String deleteUserById(Long id) {
         User user = userRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("해당 ID의 책이 없습니다."));
+                .orElseThrow(()-> new IllegalArgumentException("해당 ID의 유저가 없습니다."));
         // 삭제
         user.setIsDeleted(true);
         userRepository.save(user);

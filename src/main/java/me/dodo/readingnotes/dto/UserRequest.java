@@ -28,7 +28,6 @@ public class UserRequest {
         return "User{" +
                 "email='" + email + '\'' +
                 ", username='" + username + '\'' +
-                ", password='" + password + '\'' +
                 '}';
     }
 

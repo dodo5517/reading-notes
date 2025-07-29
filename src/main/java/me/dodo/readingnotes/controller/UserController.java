@@ -25,7 +25,7 @@ public class UserController {
 
     // post(일반 회원가입)
     @PostMapping
-    public UserResponse saveUser(@RequestBody @Valid UserRequest request){ // @Valid는 유효성 검사를 해줌.
+    public UserResponse registerUser(@RequestBody @Valid UserRequest request){ // @Valid는 유효성 검사를 해줌.
         log.debug("회원가입 요청(request): {}", request.toString());
 
         User user = new User();
@@ -33,9 +33,9 @@ public class UserController {
         user.setUsername(request.getUsername());
         user.setPassword(request.getPassword());
 
+        User savedUser = userService.registerUser(user);
         log.debug("user: {}", user.toString());
 
-        User savedUser = userService.saveUser(user);
         return new UserResponse(savedUser);
     }
 
