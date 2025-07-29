@@ -1,6 +1,8 @@
 package me.dodo.readingnotes.controller;
 
 import jakarta.validation.Valid;
+import me.dodo.readingnotes.dto.LoginRequest;
+import me.dodo.readingnotes.dto.LoginResponse;
 import me.dodo.readingnotes.dto.UserRequest;
 import me.dodo.readingnotes.dto.UserResponse;
 import me.dodo.readingnotes.service.UserService;
@@ -28,15 +30,20 @@ public class UserController {
     public UserResponse registerUser(@RequestBody @Valid UserRequest request){ // @Valid는 유효성 검사를 해줌.
         log.debug("회원가입 요청(request): {}", request.toString());
 
-        User user = new User();
-        user.setEmail(request.getEmail());
-        user.setUsername(request.getUsername());
-        user.setPassword(request.getPassword());
-
-        User savedUser = userService.registerUser(user);
-        log.debug("user: {}", user.toString());
+        User savedUser = userService.registerUser(request.toEntity());
+        log.debug("user: {}", savedUser.toString());
 
         return new UserResponse(savedUser);
+    }
+
+    // 일반 로그인
+    @PostMapping("/login")
+    public LoginResponse loginUser(@RequestBody @Valid LoginRequest request){
+        log.debug("로그인 요청(request): {}", request.toString());
+
+        User user = userService.loginUser(request.getEmail(), request.getPassword());
+
+        return new LoginResponse("로그인 성공", new UserResponse(user));
     }
 
     // 특정 유저 조희

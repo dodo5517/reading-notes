@@ -25,7 +25,7 @@ public class UserService {
         this.passwordEncoder = passwordEncoder;
     }
 
-    // 유저 저장
+    // 유저 회원가입
     @Transactional // 트랜젝션 처리
     public User registerUser(User user) {
         if (userRepository.existsByEmail(user.getEmail())){
@@ -50,13 +50,30 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // 유저 로그인(필요한 최소 정보만 따로 받음)
+    public User loginUser(String email, String password) {
+        User user = userRepository.findByEmail(email)
+                .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
+
+        if(user.getIsDeleted()){
+            throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        }
+        if(!passwordEncoder.matches(password,user.getPassword())){ // 평문 비교가 아닌 해시 비교
+            throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
+        }
+
+        log.info("로그인 성공");
+        return user;
+    }
+
     // 전체 유저 조회
     public List<User> findAllUsers() {
         // 필요하면 탈퇴 유저는 제외하고 보도록 추가 해야함.
         return userRepository.findAll(); }
 
     // ID로 유저 조회
-    public User findUserById(Long id) { return userRepository.findById(id)
+    public User findUserById(Long id) {
+        return userRepository.findById(id)
             .orElseThrow(() -> new IllegalArgumentException("해당 ID의 유저가 없습니다."));
     }
 
