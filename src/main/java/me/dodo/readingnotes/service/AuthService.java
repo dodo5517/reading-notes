@@ -59,6 +59,8 @@ public class AuthService {
         // 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
+
+        // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
         log.info("accessToken: {}", accessToken.substring(0,4));
 
         // 기존 동일 기기 토큰 삭제
@@ -77,6 +79,8 @@ public class AuthService {
         tokenEntity.setDeviceInfo(deviceInfo);
         
         refreshTokenRepository.save(tokenEntity); // DB에 저장
+
+        // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
         log.info("refreshToken: {}", tokenEntity.getToken().substring(0,4));
 
         return new AuthResult(user, accessToken, refreshToken);
