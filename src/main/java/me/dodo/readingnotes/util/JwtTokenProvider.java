@@ -5,6 +5,8 @@ import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
 import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
+import jakarta.servlet.http.HttpServletRequest;
+import me.dodo.readingnotes.domain.User;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -28,12 +30,13 @@ public class JwtTokenProvider {
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 7;
 
     // Acess Token 생성
-    public String createAccessToken(String email) {
+    public String createAccessToken(User user) {
         Date now = new Date();
         Date expiryDate = new Date(now.getTime() + accessTokenValidity);
 
         return Jwts.builder()
-                .setSubject(email) // 토큰 주인 정보
+                .setSubject(user.getEmail()) // 토큰 주인 email
+                .claim("userId", user.getId()) // 토큰 주인 ID
                 .setIssuedAt(now) // 발급 시간
                 .setExpiration(expiryDate) // 만료 시간
                 .signWith(key) // 서명(변조 방지)
@@ -53,14 +56,14 @@ public class JwtTokenProvider {
                 .compact();
     }
     
-    // 클라이언트에서 보낸 토큰에서 email 추출
-    public String getEmailFromToken(String token) {
+    // 클라이언트에서 보낸 토큰에서 userId 추출
+    public Long getUserIdFromToken(String token) {
         return Jwts.parserBuilder()
                 .setSigningKey(key)
                 .build()
                 .parseClaimsJws(token)
                 .getBody()
-                .getSubject();
+                .get("userId", Long.class);
     }
 
     // 토큰 유효성 검사
@@ -77,6 +80,15 @@ public class JwtTokenProvider {
             log.error("유효하지 않은 토큰입니다: {}",e.getMessage());
         }
         return false;
+    }
+
+    // Authorization 헤더에서 꺼내기
+    public static String extractToken(HttpServletRequest request) {
+        String authHeader = request.getHeader("Authorization");
+        if (authHeader != null && authHeader.startsWith("Bearer ")) {
+            return authHeader.substring(7);
+        }
+        throw new IllegalArgumentException("유효하지 않은 Authorization header 입니다.");
     }
 
     // 토큰 만료 시간 확인
