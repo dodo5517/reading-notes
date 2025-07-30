@@ -5,6 +5,7 @@ import me.dodo.readingnotes.domain.User;
 import me.dodo.readingnotes.dto.AuthResult;
 import me.dodo.readingnotes.repository.RefreshTokenRepository;
 import me.dodo.readingnotes.repository.UserRepository;
+import me.dodo.readingnotes.util.DeviceInfoParser;
 import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -39,7 +40,7 @@ public class AuthService {
 
     // 유저 로그인(필요한 최소 정보만 따로 받음)
     @Transactional // 트랜젝션 처리
-    public AuthResult loginUser(String email, String password) {
+    public AuthResult loginUser(String email, String password, String userAgent) {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
@@ -51,10 +52,17 @@ public class AuthService {
         }
         log.info("로그인 성공");
 
+        // 디바이스 정보 파싱
+        String deviceInfo = DeviceInfoParser.extractDeviceInfo(userAgent);
+        log.debug("deviceInfo: {}", deviceInfo);
+
         // 토큰 생성
         String accessToken = jwtTokenProvider.createAccessToken(email);
         String refreshToken = jwtTokenProvider.createRefreshToken();
         log.info("accessToken: {}", accessToken.substring(0,4));
+
+        // 기존 동일 기기 토큰 삭제
+        refreshTokenRepository.deleteByUserIdAndDeviceInfo(user.getId(), deviceInfo);
 
         // refresh 토큰 만료 시간
         Date refreshExpiry = jwtTokenProvider.getExpirationDate(refreshToken);
@@ -66,9 +74,9 @@ public class AuthService {
         // Date 타입을 LocalDateTime으로 변환
         tokenEntity.setExpiryDate(refreshExpiry.toInstant()
                 .atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime());
-        // 무슨 device인지 request에서 가져와야 함.
-        tokenEntity.setDeviceInfo("Chrom");
-        refreshTokenRepository.save(tokenEntity);
+        tokenEntity.setDeviceInfo(deviceInfo);
+        
+        refreshTokenRepository.save(tokenEntity); // DB에 저장
         log.info("refreshToken: {}", tokenEntity.getToken().substring(0,4));
 
         return new AuthResult(user, accessToken, refreshToken);
@@ -76,7 +84,7 @@ public class AuthService {
 
     // 토큰 재발급
     @Transactional
-    public AuthResult reissueAccessToken(String refreshToken, String deviceInfo) {
+    public AuthResult reissueAccessToken(String refreshToken, String userAgent) {
         // 토큰 유효성 검증
         if (!jwtTokenProvider.validateToken(refreshToken)) {
             throw new IllegalArgumentException("유효하지 않거나 만료된 refresh_token 입니다.");
@@ -86,6 +94,11 @@ public class AuthService {
         RefreshToken tokenInDb = refreshTokenRepository.findByToken(refreshToken)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 refresh_token 입니다."));
 
+        // 디바이스 정보 파싱
+        String deviceInfo = DeviceInfoParser.extractDeviceInfo(userAgent);
+        log.debug("deviceInfo: {}", deviceInfo);
+        
+        // DB에서 device_info 검증
         if (!tokenInDb.getDeviceInfo().equals(deviceInfo)) {
             throw new IllegalArgumentException("기기 정보가 일치하지 않습니다.");
         }
