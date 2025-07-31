@@ -9,6 +9,7 @@ import me.dodo.readingnotes.domain.User;
 import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger; // java.util.logging.Logger 보다 세부 설정 가능.
 import org.slf4j.LoggerFactory;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.ArrayList;
@@ -55,6 +56,18 @@ public class UserController {
     public UserResponse getUser(@PathVariable Long id){
         User user = userService.findUserById(id);
         return new UserResponse(user);
+    }
+
+    // api_key 재발급
+    @PostMapping("/api-key/reissue")
+    public ResponseEntity<ApiKeyResponse> reissueApiKey(HttpServletRequest request) {
+        log.debug("API Key 재발급 요청");
+
+        String token = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        String maskedApiKey = userService.reissueApiKey(userId);
+        return ResponseEntity.ok(new ApiKeyResponse("API Key가 새로 발급되었습니다.", maskedApiKey));
     }
 
     // 모든 유저 조희

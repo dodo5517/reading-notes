@@ -54,6 +54,26 @@ public class UserService {
         return userRepository.save(user);
     }
 
+    // api_key 재발급
+    @Transactional
+    public String reissueApiKey(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        String newApiKey = ApiKeyGenerator.generate(); // 랜덤 키 생성 로직
+        user.setApiKey(newApiKey); // apiKey 갱신
+        userRepository.save(user);
+
+        return maskApiKey(newApiKey); // 마스킹된 키 반환
+    }
+    // api_key 마스킹
+    private String maskApiKey(String apiKey) {
+        if (apiKey == null || apiKey.length() < 4) return "****";
+        int visibleCount = 4;
+        int maskCount = apiKey.length() - visibleCount;
+        return "*".repeat(maskCount) + apiKey.substring(maskCount);
+    }
+
     // 전체 유저 조회
     public List<User> findAllUsers() {
         // 필요하면 탈퇴 유저는 제외하고 보도록 추가 해야함.
