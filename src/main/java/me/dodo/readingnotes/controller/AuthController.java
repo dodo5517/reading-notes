@@ -63,6 +63,9 @@ public class AuthController {
     public ResponseEntity<Void> logout(HttpServletRequest httpRequest,
                                        HttpServletResponse httpResponse,
                                        @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+
+        log.debug("현재 기기에서 로그아웃 요청");
+        
         // Header에서 User-Agent 가져옴
         String userAgent = httpRequest.getHeader("User-Agent");
 
@@ -90,6 +93,8 @@ public class AuthController {
                                                  HttpServletResponse httpResponse) {
         // 이미 만료된 쿠키로 요청이 올 수도 있으므로 @CookieValue는 굳이 받지 않음.
 
+        log.debug("모든 기기에서 로그아웃 요청");
+        
         String accessToken = jwtTokenProvider.extractToken(httpRequest);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
