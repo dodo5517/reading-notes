@@ -58,7 +58,7 @@ public class AuthController {
         return new AuthResponse("로그인 성공", new UserResponse(result.getUser()), result.getAccessToken(), null);
     }
 
-    // 로그아웃
+    // 현재 기기에서 로그아웃
     @PostMapping("/logout")
     public ResponseEntity<Void> logout(HttpServletRequest httpRequest,
                                        HttpServletResponse httpResponse,
@@ -71,7 +71,7 @@ public class AuthController {
 
         authService.logoutUser(userId, userAgent);
 
-        // 쿠키 제거
+        // refreshToken 쿠키 제거
         ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
                 .httpOnly(true)
                 .secure(true)
@@ -82,6 +82,30 @@ public class AuthController {
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
 
         return ResponseEntity.noContent().build(); // 204 응답
+    }
+
+    // 모든 기기에서 로그아웃
+    @PostMapping("/logout/all")
+    public ResponseEntity<Void> logoutAllDevices(HttpServletRequest httpRequest,
+                                                 HttpServletResponse httpResponse) {
+        // 이미 만료된 쿠키로 요청이 올 수도 있으므로 @CookieValue는 굳이 받지 않음.
+
+        String accessToken = jwtTokenProvider.extractToken(httpRequest);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        authService.logoutAllDevices(userId);
+
+        // refreshToken 쿠키 제거
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        return ResponseEntity.noContent().build();
     }
 
     // 토큰 재발급

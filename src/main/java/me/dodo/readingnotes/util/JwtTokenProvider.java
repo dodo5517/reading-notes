@@ -24,8 +24,9 @@ public class JwtTokenProvider {
     private final Key key = Keys.secretKeyFor(SignatureAlgorithm.HS256);
 
     // 토큰 유효 시간
-    // 30분
-    private final long accessTokenValidity = 1000 * 60 * 30;
+    // 30분 =  1000 * 60 * 30;
+    // 테스트 위해서 지금은 5초;
+    private final long accessTokenValidity = 1000 * 5 * 1;
     // 7일
     private final long refreshTokenValidity = 1000L * 60 * 60 * 24 * 7;
 

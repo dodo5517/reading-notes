@@ -95,7 +95,7 @@ public class AuthService {
         return new AuthResult(user, accessToken, refreshToken);
     }
 
-    // 유저 로그아웃(RefreshToken 삭제)
+    // 현재 기기에서 로그아웃(RefreshToken 삭제)
     @Transactional
     public void logoutUser(Long userId, String userAgent) {
         // 디바이스 정보 파싱
@@ -108,6 +108,13 @@ public class AuthService {
 
         // refreshToken DB에서 삭제
         refreshTokenRepository.delete(token);
+    }
+
+    // 모든 기기에서 로그아웃
+    @Transactional
+    public void logoutAllDevices(Long userId) {
+        // 해당 유저의 모든 디바이스의 RefreshToken 삭제
+        refreshTokenRepository.deleteAllByUserId(userId);
     }
 
     // 토큰 재발급
