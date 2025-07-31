@@ -95,6 +95,21 @@ public class AuthService {
         return new AuthResult(user, accessToken, refreshToken);
     }
 
+    // 유저 로그아웃(RefreshToken 삭제)
+    @Transactional
+    public void logoutUser(Long userId, String userAgent) {
+        // 디바이스 정보 파싱
+        String deviceInfo = DeviceInfoParser.extractDeviceInfo(userAgent);
+        log.debug("deviceInfo: {}", deviceInfo);
+
+        // userId와 deviceInfo로 refreshToken 찾기
+        RefreshToken token = refreshTokenRepository.findByUserIdAndDeviceInfo(userId, deviceInfo)
+                .orElseThrow(() -> new IllegalArgumentException("Refresh token이 존재하지 않습니다."));
+
+        // refreshToken DB에서 삭제
+        refreshTokenRepository.delete(token);
+    }
+
     // 토큰 재발급
     @Transactional
     public AuthResult reissueAccessToken(String refreshToken, String userAgent) {

@@ -7,7 +7,10 @@ import me.dodo.readingnotes.dto.*;
 import me.dodo.readingnotes.service.AuthService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.ResponseCookie;
+import org.springframework.http.ResponseEntity;
+import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.springframework.web.bind.annotation.*;
 
 @RestController
@@ -15,10 +18,12 @@ import org.springframework.web.bind.annotation.*;
 public class AuthController {
 
     private final AuthService authService;
+    private final JwtTokenProvider jwtTokenProvider;
     private static final Logger log = LoggerFactory.getLogger(AuthController.class);
 
-    public AuthController(AuthService authService) {
+    public AuthController(AuthService authService, JwtTokenProvider jwtTokenProvider) {
         this.authService = authService;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
     // 일반 로그인
@@ -51,6 +56,32 @@ public class AuthController {
         // accessToken -> JSON 응답 body에 포함
         // refreshToken은 쿠키로 보냈으므로 응답 body에는 null로 처리
         return new AuthResponse("로그인 성공", new UserResponse(result.getUser()), result.getAccessToken(), null);
+    }
+
+    // 로그아웃
+    @PostMapping("/logout")
+    public ResponseEntity<Void> logout(HttpServletRequest httpRequest,
+                                       HttpServletResponse httpResponse,
+                                       @CookieValue(value = "refreshToken", required = false) String refreshToken) {
+        // Header에서 User-Agent 가져옴
+        String userAgent = httpRequest.getHeader("User-Agent");
+
+        String token = jwtTokenProvider.extractToken(httpRequest);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        authService.logoutUser(userId, userAgent);
+
+        // 쿠키 제거
+        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
+                .httpOnly(true)
+                .secure(true)
+                .path("/")
+                .maxAge(0)
+                .sameSite("Strict")
+                .build();
+        httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
+
+        return ResponseEntity.noContent().build(); // 204 응답
     }
 
     // 토큰 재발급
