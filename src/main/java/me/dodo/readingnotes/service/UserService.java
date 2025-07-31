@@ -74,6 +74,16 @@ public class UserService {
         return "*".repeat(maskCount) + apiKey.substring(maskCount);
     }
 
+    // api_key 전체(마스킹 안 된) 조회
+    @Transactional(readOnly = true)
+    public String getRawApiKey(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        return user.getApiKey();
+    }
+
+
     // 전체 유저 조회
     public List<User> findAllUsers() {
         // 필요하면 탈퇴 유저는 제외하고 보도록 추가 해야함.

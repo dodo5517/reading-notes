@@ -60,16 +60,28 @@ public class UserController {
 
     // api_key 재발급
     @PostMapping("/api-key/reissue")
-    public ResponseEntity<ApiKeyResponse> reissueApiKey(HttpServletRequest request) {
+    public ResponseEntity<MaskedApiKeyResponse> reissueApiKey(HttpServletRequest request) {
         log.debug("API Key 재발급 요청");
 
         String token = jwtTokenProvider.extractToken(request);
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
         String maskedApiKey = userService.reissueApiKey(userId);
-        return ResponseEntity.ok(new ApiKeyResponse("API Key가 새로 발급되었습니다.", maskedApiKey));
+        return ResponseEntity.ok(new MaskedApiKeyResponse("API Key가 새로 발급되었습니다.", maskedApiKey));
     }
 
+    // api_key 전체(마스킹 안 된) 조회
+    @GetMapping("/api-key")
+    public ResponseEntity<ApiKeyResponse> getApiKey(HttpServletRequest request) {
+        log.debug("API Key 전체 조회 요청");
+        
+        String token = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        String apiKey = userService.getRawApiKey(userId);
+        return ResponseEntity.ok(new ApiKeyResponse("API Key 조회 성공", apiKey));
+    }
+    
     // 모든 유저 조희
     @GetMapping
     public List<UserResponse> getAllUsers(){
