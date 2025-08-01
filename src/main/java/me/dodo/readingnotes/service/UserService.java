@@ -1,6 +1,7 @@
 package me.dodo.readingnotes.service;
 
 // jakarta.transaction.Transactional 보다 밑에가 spring framework 전용으로 연동 잘 됨.
+import me.dodo.readingnotes.exception.PasswordMismatchException;
 import me.dodo.readingnotes.repository.RefreshTokenRepository;
 import me.dodo.readingnotes.util.ApiKeyGenerator;
 import me.dodo.readingnotes.util.JwtTokenProvider;
@@ -12,7 +13,6 @@ import me.dodo.readingnotes.domain.User;
 import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-
 
 import java.util.List;
 
@@ -83,6 +83,41 @@ public class UserService {
         return user.getApiKey();
     }
 
+    // 유저 이름 수정
+    @Transactional
+    public boolean updateUsername(Long userId, String newUsername) {
+        // 유저 존재 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        log.debug("newUsername: {}", newUsername);
+
+        user.setUsername(newUsername); // 새로운 유저이름 저장
+        userRepository.save(user); // DB에 저장
+
+        return true;
+    }
+    
+    // 유저 비밀번호 수정
+    @Transactional
+    public boolean updatePassword(Long userId, String currentPassword, String newPassword) {
+        // 유저 존재 확인
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        // 기존 비밀번호 비교
+        if (!passwordEncoder.matches(currentPassword, user.getPassword())){ // 평문 비교가 아니라 해시 비교
+            throw new PasswordMismatchException("기존 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 기존 user 정보 가져와서 담기
+        User newUser = user;
+        // 새로운 비밀번호 해싱 후 저장
+        newUser.setPassword(passwordEncoder.encode(newPassword));
+        userRepository.save(newUser); // DB에 저장
+
+        return true;
+    }
 
     // 전체 유저 조회
     public List<User> findAllUsers() {

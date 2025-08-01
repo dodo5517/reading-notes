@@ -28,7 +28,7 @@ public class UserController {
                           JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
             this.userService = userService; // controller에 service 의존성 주입
             this.jwtTokenProvider = jwtTokenProvider;
-        this.userRepository = userRepository;
+            this.userRepository = userRepository;
     }
 
     // post(일반 회원가입)
@@ -43,12 +43,53 @@ public class UserController {
     }
 
     // 로그인한 유저의 정보 조회
-    @GetMapping("me")
+    @GetMapping("/me")
     public UserResponse getMe(HttpServletRequest request){
         String token = jwtTokenProvider.extractToken(request);
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
-        User user = userRepository.findById(userId).orElseThrow(() -> new RuntimeException("사용자가 존재하지 않습니다."));
+        User user = userService.findUserById(userId);
         return new UserResponse(user);
+    }
+
+    // 유저 이름 수정
+    @PatchMapping("/me/username")
+    public ResponseEntity<Void> updateUsername(@RequestBody @Valid UpdateUsernameRequest request,
+                                               HttpServletRequest httpRequest){
+        log.debug("유저이름 수정 요청");
+        log.debug("수정할 이름: {}", request.getNewUsername());
+
+        // 토큰에서 userId 추출
+        String token = jwtTokenProvider.extractToken(httpRequest);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        // 유저 이름 수정
+        Boolean result = userService.updateUsername(userId, request.getNewUsername());
+
+        // 수정 확인
+        log.debug("updateUsername: {}", result);
+
+        // 상태코드만 반환 (204)
+        return ResponseEntity.noContent().build();
+    }
+
+    // 유저 비밀번호 수정
+    @PatchMapping("/me/password")
+    public ResponseEntity<Void> updatePassword(@RequestBody @Valid UpdatePasswordRequest request,
+                                               HttpServletRequest httpRequest){
+        log.debug("비밀번호 수정 요청");
+        
+        // 토큰에서 userId 추출
+        String token = jwtTokenProvider.extractToken(httpRequest);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        // 유저 비밀번호 수정
+        Boolean result = userService.updatePassword(userId, request.getCurrentPassword(), request.getNewPassword());
+
+        // 수정 확인
+        log.debug("updatePassword: {}", result);
+
+        // 상태코드만 반환 (204)
+        return ResponseEntity.noContent().build();
     }
 
     // 특정 유저 조희
