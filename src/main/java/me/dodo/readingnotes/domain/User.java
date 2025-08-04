@@ -144,4 +144,16 @@ public class User {
     public void setUpdatedAt(LocalDateTime updatedAt) {
         this.updatedAt = updatedAt;
     }
+
+    public static User fromSocial(String email, String username, String provider, String providerId, String apiKey) {
+        User user = new User();
+        user.setEmail(email);
+        user.setUsername(username);
+        user.setProvider(provider);
+        user.setProviderId(providerId);
+        user.setApiKey(apiKey);
+        user.setRole("ROLE_USER");
+        return user;
+    }
+
 }

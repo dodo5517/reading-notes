@@ -5,6 +5,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import me.dodo.readingnotes.dto.*;
 import me.dodo.readingnotes.service.AuthService;
+import me.dodo.readingnotes.util.CookieUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpHeaders;
@@ -43,13 +44,8 @@ public class AuthController {
         );
 
         // refreshToken -> HttpOnly 쿠키에 저장
-        ResponseCookie refreshCookie = ResponseCookie.from("refreshToken", result.getRefreshToken())
-                .httpOnly(true)
-                .secure(false) // 실제 운영할 때는 true로 해야함. HTTPS는 기본으로 해야함
-                .path("/") // 모든 경로에 쿠키 전송
-                .maxAge(7 * 24 * 60 * 60) // 7일
-                .sameSite("Strict") // CSRF 방지
-                .build();
+        ResponseCookie refreshCookie = CookieUtil.createRefreshTokenCookie(result.getRefreshToken(), false);
+
         // 헤더에 저장
         httpResponse.addHeader("Set-Cookie", refreshCookie.toString());
 
@@ -75,13 +71,9 @@ public class AuthController {
         authService.logoutUser(userId, userAgent);
 
         // refreshToken 쿠키 제거
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
+        ResponseCookie deleteCookie = CookieUtil.deleteRefreshTokenCookie();
+
+        // 헤더에 저장
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
 
         return ResponseEntity.noContent().build(); // 204 응답
@@ -101,16 +93,12 @@ public class AuthController {
         authService.logoutAllDevices(userId);
 
         // refreshToken 쿠키 제거
-        ResponseCookie deleteCookie = ResponseCookie.from("refreshToken", "")
-                .httpOnly(true)
-                .secure(true)
-                .path("/")
-                .maxAge(0)
-                .sameSite("Strict")
-                .build();
+        ResponseCookie deleteCookie = CookieUtil.deleteRefreshTokenCookie();
+
+        // 헤더에 저장
         httpResponse.addHeader(HttpHeaders.SET_COOKIE, deleteCookie.toString());
 
-        return ResponseEntity.noContent().build();
+        return ResponseEntity.noContent().build(); // 204 응답
     }
 
     // 토큰 재발급
