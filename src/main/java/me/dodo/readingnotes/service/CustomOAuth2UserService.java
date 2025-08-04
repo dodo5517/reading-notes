@@ -35,17 +35,37 @@ public class CustomOAuth2UserService implements
         // userRequest에 있는 액세스 토큰으로 사용자 정보를 요청하여 OAuth2User 형태로 받아옴. (attributes에 email,name 등이 담김)
         OAuth2User oAuth2User = delegate.loadUser(userRequest);
 
+        // atrributes 추출
+        Map<String, Object> attributes = oAuth2User.getAttributes();
+
         // 로그인할 서비스 구분(ex. google, naver, kakao)
         // registrasion은 application-oauth.properties에 등록한 소셜 로그인 ID
         String registrationId = userRequest.getClientRegistration().getRegistrationId();
-        // OAuth2 로그인 진행 시 기본키가 되는 필드 = Primary Key, 구글은 sub
-        String userNameAttribute = userRequest.getClientRegistration()
-                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 
-        // atrributes 추출
-        Map<String, Object> attributes = oAuth2User.getAttributes();
-        String email = (String) attributes.get("email");
-        String name = (String) attributes.get("name");
+        String email, name, providerId;
+
+        String userNameAttribute = null;
+
+        if ("naver".equals(registrationId)) {
+            Map<String, Object> response = (Map<String, Object>) attributes.get("response");
+            email = (String) response.get("email");
+            name = (String) response.get("name");
+            providerId = (String) response.get("id");
+            attributes = response; // 저장용 attributes도 바꿔줌
+            userNameAttribute = "id";
+        } else if ("google".equals(registrationId)) {
+            email = (String) attributes.get("email");
+            name = (String) attributes.get("name");
+            providerId = (String) attributes.get("sub");
+            userNameAttribute = "sub";
+        } else {
+            throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다: " + registrationId);
+        }
+
+        // OAuth2 로그인 진행 시 기본키가 되는 필드 = Primary Key
+//        String userNameAttribute = userRequest.getClientRegistration()
+//                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
+//        log.debug("userNameAttribute: {}", userNameAttribute);
 
         // 일반 회원가입한 이메일로 로그인 시 소셜 로그인 거부
         userRepository.findByEmail(email).ifPresent(user -> {
@@ -65,7 +85,7 @@ public class CustomOAuth2UserService implements
         // DB에 저장
         userRepository.findByEmail(email)
                 .orElseGet(() -> userRepository.save(
-                        User.fromSocial(email, name, "google",(String) attributes.get("sub"), api_key)
+                        User.fromSocial(email, name, registrationId, providerId, api_key)
                 ));
 
         // 객체로 만들어 전달
