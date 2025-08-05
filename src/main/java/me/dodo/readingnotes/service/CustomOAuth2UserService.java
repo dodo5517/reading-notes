@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Service;
 
 import java.util.Collections;
+import java.util.HashMap;
 import java.util.Map;
 
 @Service
@@ -58,7 +59,15 @@ public class CustomOAuth2UserService implements
             name = (String) attributes.get("name");
             providerId = (String) attributes.get("sub");
             userNameAttribute = "sub";
-        } else {
+        } else if ("kakao".equals(registrationId)) {
+            Map<String, Object> kakaoAccount = (Map<String, Object>) attributes.get("kakao_account");
+            Map<String, Object> profile = (Map<String, Object>) kakaoAccount.get("profile");
+            email = (String) kakaoAccount.get("email");
+            name = (String) profile.get("nickname");
+            providerId = String.valueOf(attributes.get("id"));
+            userNameAttribute = "id";
+        }
+        else {
             throw new IllegalArgumentException("지원하지 않는 소셜 로그인입니다: " + registrationId);
         }
 
@@ -67,10 +76,18 @@ public class CustomOAuth2UserService implements
 //                .getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
 //        log.debug("userNameAttribute: {}", userNameAttribute);
 
+        // 직접 attributes를 생성하여 평탄화함.
+        Map<String, Object> customAttributes = new HashMap<>();
+        customAttributes.put("email", email);
+        customAttributes.put("name", name);
+        customAttributes.put("provider", registrationId);
+        customAttributes.put(userNameAttribute, providerId);
+        customAttributes.put("original", attributes);
+
         // 일반 회원가입한 이메일로 로그인 시 소셜 로그인 거부
         userRepository.findByEmail(email).ifPresent(user -> {
             if (user.getProvider() == null || !user.getProvider().equals(registrationId)) {
-                throw new IllegalArgumentException("이미 일반 가입된 이메일입니다. 소셜 로그인 불가");
+                throw new IllegalArgumentException("이미 가입된 이메일입니다.");
             }
         });
 
@@ -83,17 +100,18 @@ public class CustomOAuth2UserService implements
         }
 
         // DB에 저장
-        userRepository.findByEmail(email)
+        User user = userRepository.findByEmail(email)
                 .orElseGet(() -> userRepository.save(
                         User.fromSocial(email, name, registrationId, providerId, api_key)
                 ));
+        log.debug("user: {}", user);
 
         // 객체로 만들어 전달
         return new DefaultOAuth2User(
                 // 권한 지정 = ROLE_USER
                 Collections.singleton(new SimpleGrantedAuthority("ROLE_USER")),
                 // 불러온 사용자 정보
-                attributes,
+                customAttributes,
                 // 식별자로 삼을 key
                 userNameAttribute
         );
