@@ -83,6 +83,15 @@ public class UserService {
         return user.getApiKey();
     }
 
+    // 유저 프로필 이미지 수정
+    @Transactional
+    public void updateProfileImage(Long id, String imageUrl) {
+        User user = userRepository.findById(id)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+        user.setProfileImageUrl(imageUrl);
+        userRepository.save(user);
+    }
+
     // 유저 이름 수정
     @Transactional
     public boolean updateUsername(Long userId, String newUsername) {

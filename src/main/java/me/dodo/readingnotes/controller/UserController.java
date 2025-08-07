@@ -4,6 +4,7 @@ import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
 import me.dodo.readingnotes.dto.*;
 import me.dodo.readingnotes.repository.UserRepository;
+import me.dodo.readingnotes.service.S3Service;
 import me.dodo.readingnotes.service.UserService;
 import me.dodo.readingnotes.domain.User;
 import me.dodo.readingnotes.util.JwtTokenProvider;
@@ -11,22 +12,27 @@ import org.slf4j.Logger; // java.util.logging.Logger 보다 세부 설정 가능
 import org.slf4j.LoggerFactory;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/users")
 public class UserController {
 
     private final UserService userService;
+    private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
     private final UserRepository userRepository;
 
     public UserController(UserService userService,
+                          S3Service s3Service,
                           JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
             this.userService = userService; // controller에 service 의존성 주입
+            this.s3Service = s3Service;
             this.jwtTokenProvider = jwtTokenProvider;
             this.userRepository = userRepository;
     }
@@ -49,6 +55,18 @@ public class UserController {
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
         User user = userService.findUserById(userId);
         return new UserResponse(user);
+    }
+
+    // 유저 프로필 사진
+    @PostMapping("/{id}/profile-image")
+    public ResponseEntity<String> uploadProfileImage(@PathVariable Long id,
+                                                     @RequestParam("image") MultipartFile image) throws Exception {
+        String fileName = "user-" + id + "_" + UUID.randomUUID();
+        String imageUrl = s3Service.uploadProfileImage(image, fileName);
+
+        userService.updateProfileImage(id, imageUrl); // DB에 URL 저장
+
+        return ResponseEntity.ok(imageUrl);
     }
 
     // 유저 이름 수정
