@@ -22,11 +22,13 @@ public class UserService {
     private final UserRepository userRepository;
     private static final Logger log = LoggerFactory.getLogger(UserService.class);
     private final PasswordEncoder passwordEncoder;
+    private final S3Service s3Service;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenRepository refreshTokenRepositorys, RefreshTokenRepository refreshTokenRepository) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenRepository refreshTokenRepositorys, RefreshTokenRepository refreshTokenRepository, S3Service s3Service) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.s3Service = s3Service;
     }
 
     // 유저 회원가입
@@ -83,13 +85,29 @@ public class UserService {
         return user.getApiKey();
     }
 
-    // 유저 프로필 이미지 수정
+    // 유저 프로필 이미지 추가/수정
     @Transactional
     public void updateProfileImage(Long id, String imageUrl) {
         User user = userRepository.findById(id)
                 .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
         user.setProfileImageUrl(imageUrl);
         userRepository.save(user);
+    }
+
+    // 유저 프로필 이미지 삭제
+    @Transactional
+    public void deleteProfileImage(Long userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 유저입니다."));
+
+        if (user.getProfileImageUrl() != null){
+            String key = extractKeyFromUrl(user.getProfileImageUrl());
+            s3Service.deleteFile(key);
+        }
+
+    }
+    private String extractKeyFromUrl(String imageUrl) {
+        return imageUrl.substring(imageUrl.lastIndexOf("profiles/"));
     }
 
     // 유저 이름 수정

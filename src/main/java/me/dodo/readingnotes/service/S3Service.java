@@ -5,6 +5,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import software.amazon.awssdk.core.sync.RequestBody;
 import software.amazon.awssdk.services.s3.S3Client;
+import software.amazon.awssdk.services.s3.model.DeleteObjectRequest;
 import software.amazon.awssdk.services.s3.model.PutObjectRequest;
 
 import java.io.IOException;
@@ -23,6 +24,8 @@ public class S3Service {
         this.s3Client = s3Client;
     }
 
+
+    // 사진 업로드
     public String uploadProfileImage(MultipartFile file, String fileName) throws IOException {
         String key = "profiles/" + fileName;
 
@@ -36,8 +39,16 @@ public class S3Service {
 
         return getPublicUrl(key);
     }
-
     private String getPublicUrl(String key) {
         return String.format("https://%s.s3.%s.amazonaws.com/%s", bucket, region, key);
+    }
+
+    // 사진 삭제
+    public void deleteFile(String key){
+        DeleteObjectRequest deleteObjectRequest = DeleteObjectRequest.builder()
+                .bucket(bucket)
+                .key(key)
+                .build();
+        s3Client.deleteObject(deleteObjectRequest);
     }
 }

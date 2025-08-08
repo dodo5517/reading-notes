@@ -61,6 +61,10 @@ public class UserController {
     @PostMapping("/{id}/profile-image")
     public ResponseEntity<String> uploadProfileImage(@PathVariable Long id,
                                                      @RequestParam("image") MultipartFile image) throws Exception {
+        // 기존 이미지 삭제
+        userService.deleteProfileImage(id);
+
+        // 새 이미지 업로드
         String fileName = "user-" + id + "_" + UUID.randomUUID();
         String imageUrl = s3Service.uploadProfileImage(image, fileName);
 
@@ -69,6 +73,15 @@ public class UserController {
         return ResponseEntity.ok(imageUrl);
     }
 
+    // 유저 프로필 사진 삭제
+    @DeleteMapping("/{id}/profile-image")
+    public ResponseEntity<Void> deleteProfileImage(@PathVariable Long id) {
+        userService.deleteProfileImage(id);
+        userService.updateProfileImage(id, null); // DB에서 URL 제거
+        return ResponseEntity.noContent().build();
+    }
+    
+    
     // 유저 이름 수정
     @PatchMapping("/me/username")
     public ResponseEntity<Void> updateUsername(@RequestBody @Valid UpdateUsernameRequest request,
