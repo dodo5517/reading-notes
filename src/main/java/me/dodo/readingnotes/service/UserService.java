@@ -45,6 +45,9 @@ public class UserService {
         String encodedPw = passwordEncoder.encode(user.getPassword());
         user.setPassword(encodedPw);
 
+        // provider 일반 로그인으로 저장
+        user.setProvider("local");
+
         // api_key
         user.setApiKey(ApiKeyGenerator.generate()); // api_key 생성
         if (user.getApiKey() != null){

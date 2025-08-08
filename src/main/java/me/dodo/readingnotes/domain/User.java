@@ -18,12 +18,12 @@ public class User {
     private String username; // 유저 이름
 
     @Column(nullable = false, unique = true, length = 100)
-    private String email; // 이메일, 모두 있어야 함
+    private String email; // 이메일
 
     @Column(length = 255)
     private String password; // 비밀번호 (소셜 로그인은 필요X)
 
-    @Column(length = 20)
+    @Column(nullable = false, length = 20)
     private String provider; // ex.카카오, 네이버, 구글, 일반
 
     @Column(name = "provider_id", length = 100)
