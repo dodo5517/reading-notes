@@ -13,4 +13,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
     boolean existsByUsername(String username); // SELECT COUNT(*) FROM user WHERE username = ?
 
     Optional<User> findByEmail(String email);
+
+    Optional<User> findByApiKey(String apiKey);
 }

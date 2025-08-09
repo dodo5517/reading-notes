@@ -1,11 +1,10 @@
 package me.dodo.readingnotes.dto;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReadingRecordRequest {
-    private String title;
-    private LocalDate date;
-    private String author;
+    private String rawTitle;
+    private String rawAuthor;
     private String sentence;
     private String comment;
 
@@ -15,25 +14,18 @@ public class ReadingRecordRequest {
     public ReadingRecordRequest(){}
 
 
-    public String getTitle() {
-        return title;
+    public String getRawTitle() {
+        return rawTitle;
     }
-    public void setTitle(String title) {
-        this.title = title;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-    public void setDate(LocalDate date) {
-        this.date = date;
+    public void setRawTitle(String rawTitle) {
+        this.rawTitle = rawTitle;
     }
 
-    public String getAuthor() {
-        return author;
+    public String getRawAuthor() {
+        return rawAuthor;
     }
-    public void setAuthor(String author) {
-        this.author = author;
+    public void setRawAuthor(String rawAuthor) {
+        this.rawAuthor = rawAuthor;
     }
 
     public String getSentence() {
@@ -49,4 +41,5 @@ public class ReadingRecordRequest {
     public void setComment(String comment) {
         this.comment = comment;
     }
+
 }

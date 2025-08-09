@@ -1,5 +1,6 @@
 package me.dodo.readingnotes.config;
 
+import me.dodo.readingnotes.repository.UserRepository;
 import me.dodo.readingnotes.service.CustomOAuth2UserService;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -8,15 +9,19 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {
 
     private final OAuth2SuccessHandler oAuth2SuccessHandler;
+    private final UserRepository userRepository;
 
-    public SecurityConfig(OAuth2SuccessHandler oAuth2SuccessHandler) {
+    public SecurityConfig(OAuth2SuccessHandler oAuth2SuccessHandler,
+                          UserRepository userRepository) {
         this.oAuth2SuccessHandler = oAuth2SuccessHandler;
+        this.userRepository = userRepository;
     }
 
     @Bean
@@ -25,7 +30,8 @@ public class SecurityConfig {
     }
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, CustomOAuth2UserService customOAuth2UserService) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http,
+                                           CustomOAuth2UserService customOAuth2UserService) throws Exception {
         http
                 .csrf(csrf -> csrf.disable()) // H2나 Postman 테스트용
                 // H2 콘솔 띄우기 위해 옵션들 disable 처리
@@ -39,6 +45,15 @@ public class SecurityConfig {
                         .userInfoEndpoint(userInfo -> userInfo.userService(customOAuth2UserService))
                         .successHandler(oAuth2SuccessHandler)
                 );
+
+        // API Key 필터, /records 로 시작하는 경로에만 적용함.
+        ApiKeyFilter apiKeyFilter = new ApiKeyFilter(
+                userRepository,
+                "/records"
+        );
+
+        http.addFilterBefore(apiKeyFilter, UsernamePasswordAuthenticationFilter.class);
+
         return http.build();
     }
 }
