@@ -6,6 +6,10 @@ import me.dodo.readingnotes.dto.ReadingRecordRequest;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
 import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -40,6 +44,17 @@ public class ReadingRecordService {
         record.setUpdatedAt(LocalDateTime.now());
 
         return readingRecordRepository.save(record);
+    }
+
+    // 해당 유저의 최신 N개 기록 불러오기
+    public List<ReadingRecord> getLatestRecords(Long userId, int size) {
+        PageRequest pr = PageRequest.of(0, size, Sort.by(Sort.Direction.DESC, "recordedAt"));
+        return readingRecordRepository.findLatestByUser(userId, pr);
+    }
+
+    // 해당 유저의 모든 기록 불러오기
+    public Page<ReadingRecord> getMyRecords(Long userId, Pageable pageable) {
+        return readingRecordRepository.findByUser_IdOrderByRecordedAtDesc(userId, pageable);
     }
 
     // 기록 저장

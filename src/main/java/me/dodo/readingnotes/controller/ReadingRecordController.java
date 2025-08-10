@@ -4,14 +4,14 @@ import jakarta.servlet.http.HttpServletRequest;
 import me.dodo.readingnotes.config.ApiKeyFilter;
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.dto.ReadingRecordRequest;
+import me.dodo.readingnotes.dto.ReadingRecordResponse;
 import me.dodo.readingnotes.service.ReadingRecordService;
-import org.springframework.format.annotation.DateTimeFormat;
+import me.dodo.readingnotes.util.JwtTokenProvider;
+import org.springframework.data.domain.*;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
-import com.fasterxml.jackson.databind.ObjectMapper;
 
-import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -20,11 +20,14 @@ import java.util.stream.Collectors;
 public class ReadingRecordController {
 
     private final ReadingRecordService service;
+    private final JwtTokenProvider jwtTokenProvider;
 
-    public ReadingRecordController(ReadingRecordService service){
+    public ReadingRecordController(ReadingRecordService service, JwtTokenProvider jwtTokenProvider){
         this.service = service;
+        this.jwtTokenProvider = jwtTokenProvider;
     }
 
+    // 아이폰 단축어로 메모 추가
     @PostMapping
     public ResponseEntity<Long> create(HttpServletRequest request,
                                        @RequestBody ReadingRecordRequest req) {
@@ -35,6 +38,36 @@ public class ReadingRecordController {
         ReadingRecord saved = service.createByUserId(userId, req);
         return ResponseEntity.ok(saved.getId());
     }
+
+    // 해당 유저의 최근 N(default=3)개 기록 보기(메인 화면용)
+    @GetMapping("/me/summary")
+    public  List<ReadingRecordResponse> getMyLatestRecords(
+            HttpServletRequest request,
+            @RequestParam(name = "size", defaultValue = "3") int size
+    ){
+        // 헤더에서 Authorization 추출
+        String token = jwtTokenProvider.extractToken(request);
+        // 토큰에서 userId 추출
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        List<ReadingRecord> list = service.getLatestRecords(userId, size);
+        return list.stream().map(ReadingRecordResponse::new).collect(Collectors.toList());
+    }
+
+    // 해당 유저의 모든 기록 보기
+    @GetMapping("/me")
+    // Page로 반환하므로 관련된 메타데이터도 따로 전달됨.
+    public Page<ReadingRecordResponse> getMyRecords(
+            HttpServletRequest request,
+            @PageableDefault(size = 20, sort = "recordedAt", direction = Sort.Direction.DESC) Pageable pageable
+    ) {
+        String token = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        Page<ReadingRecord> page = service.getMyRecords(userId, pageable);
+        return page.map(ReadingRecordResponse::new);
+    }
+
     // author도 넣어서 post하는 경우
 //    @PostMapping
 //    public ReadingRecordResponse saveRecord(@RequestBody ReadingRecordRequest request) {

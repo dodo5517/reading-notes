@@ -3,8 +3,12 @@ package me.dodo.readingnotes.domain;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
-@Entity //이 클래스가 JPA 엔티티임을 선언. DB 테이블과 매핑됨
-@Table(name = "reading_records") //DB에서 이 엔티티가 매핑될 테이블 이름을 지정함
+@Entity // 이 클래스가 JPA 엔티티임을 선언. DB 테이블과 매핑됨
+@Table(name = "reading_records", // DB에서 이 엔티티가 매핑될 테이블 이름을 지정함
+    indexes = {
+            // user_id로 먼저 좁히고 recorded_at으로 정렬(기본이 desc임)
+            @Index(name = "idx_rr_user_recorded", columnList = "user_id, recorded_at")
+    })
 public class ReadingRecord {
 
     @Id //이 필드(id)가 기본 키임을 나타냄
@@ -32,7 +36,7 @@ public class ReadingRecord {
     private String rawAuthor;
 
     @Enumerated(EnumType.STRING)
-    @Column(name = "match_status", nullable=false) // 책 매칭된 상태
+    @Column(name = "match_status", nullable = false) // 책 매칭된 상태
     private MatchStatus matchStatus = MatchStatus.PENDING;
 
     // 최초 기록된 시간

@@ -39,6 +39,7 @@ public class SecurityConfig {
                 // 이쪽 url들은 권한 없이 들어갈 수 있음
                 .authorizeHttpRequests(auth -> auth
                     .requestMatchers("/**").permitAll() // .requestMatchers("/login/**", "/oauth2/**", "/auth/**").permitAll()
+                    .requestMatchers("/records/me", "/records/me/**").authenticated()
                     .anyRequest().authenticated()
                 )
                 .oauth2Login(oauth -> oauth

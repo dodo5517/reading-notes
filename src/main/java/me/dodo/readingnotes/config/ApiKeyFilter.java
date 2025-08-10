@@ -18,24 +18,20 @@ public class ApiKeyFilter extends OncePerRequestFilter {
     public static final String HEADER_API_KEY = "X-Api-Key";
 
     private final UserRepository userRepository;
-    // 적용할 URL prefix(들). 예: /api/records 로 들어오는 요청에만 API Key를 요구
-    private final String[] protectedPrefixes;
 
-    public ApiKeyFilter(UserRepository userRepository, String... protectedPrefixes) {
+    // 정확히 이 경로일 때만 검사
+    private final String protectedPath;
+
+    public ApiKeyFilter(UserRepository userRepository, String protectedPath) {
         this.userRepository = userRepository;
-        this.protectedPrefixes = protectedPrefixes != null ? protectedPrefixes : new String[0];
+        this.protectedPath = protectedPath;
     }
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        if (protectedPrefixes.length == 0) return true; // 보호 경로가 없으면 필터 비활성화
-        for (String prefix : protectedPrefixes) {
-            if (path.startsWith(prefix)) {
-                return false; // 보호 경로면 필터 동작
-            }
-        }
-        return true; // 그 외 경로는 필터 패스
+        String path = request.getServletPath();
+        // "/records" 정확 일치일 때만 필터 동작. 그 외 경로는 전부 PASS.
+        return !protectedPath.equals(path);
     }
     @Override
     protected void doFilterInternal(HttpServletRequest request,

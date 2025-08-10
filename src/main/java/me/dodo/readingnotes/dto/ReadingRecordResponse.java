@@ -1,58 +1,51 @@
 package me.dodo.readingnotes.dto;
 
+import me.dodo.readingnotes.domain.Book;
 import me.dodo.readingnotes.domain.ReadingRecord;
 
-import java.time.LocalDate;
+import java.time.LocalDateTime;
 
 public class ReadingRecordResponse {
     private Long id;
     private String title;
     private String author;
-    private LocalDate date;
     private String sentence;
     private String comment;
+    private Boolean matched;
+    private Long bookId;
+    private LocalDateTime recordedAt;
 
-    public ReadingRecordResponse(Long id, String title, String author, LocalDate date, String sentence, String comment) {
-        this.id = id;
-        this.title = title;
-        this.author = author;
-        this.date = date;
-        this.sentence = sentence;
-        this.comment = comment;
+    public ReadingRecordResponse(ReadingRecord r) {
+        this.id = r.getId();
+        this.recordedAt = r.getRecordedAt();
+        
+        // 책 매칭된 상태인지 확인
+        boolean isResolved = r.getMatchStatus() != null &&
+                (r.getMatchStatus() == ReadingRecord.MatchStatus.RESOLVED_AUTO
+                || r. getMatchStatus() == ReadingRecord.MatchStatus.RESOLVED_MANUAL);
+
+        Book book = r.getBook();
+        // 책이 매칭 완료된 상태라면 연결된 책 정보 사용.
+        if (isResolved && book != null) {
+            this.title = book.getTitle();
+            this.author = book.getAuthor();
+            this.matched = true;
+            this.bookId = book.getId();
+        } else {
+            // 매칭되지 않은 상태라면 raw 사용
+            this.title = r.getRawTitle();
+            this.author = r.getRawAuthor();
+            this.matched = false;
+            this.bookId = null;
+        }
     }
 
-    // 새로운 생성자: ReadingRecord 객체를 받아서 처리 (update 처리할 때 ReadingRecord 객체를 받기 때문에 필요)
-    public ReadingRecordResponse(ReadingRecord record) {
-        this.id = record.getId();
-        this.title = record.getTitle();
-        this.author = record.getAuthor();
-        this.date = record.getDate();
-        this.sentence = record.getSentence();
-        this.comment = record.getComment();
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getTitle() {
-        return title;
-    }
-
-    public String getAuthor() {
-        return author;
-    }
-
-    public LocalDate getDate() {
-        return date;
-    }
-
-    public String getSentence() {
-        return sentence;
-    }
-
-    public String getComment() {
-        return comment;
-    }
-
+    public Long getId() { return id; }
+    public String getTitle() { return title; }
+    public String getAuthor() { return author; }
+    public String getSentence() { return sentence; }
+    public String getComment() { return comment; }
+    public Boolean getMatched() { return matched; }
+    public Long getBookId() { return bookId; }
+    public LocalDateTime getRecordedAt() { return recordedAt; }
 }
