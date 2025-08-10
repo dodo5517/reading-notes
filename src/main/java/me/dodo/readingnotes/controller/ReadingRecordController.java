@@ -7,6 +7,8 @@ import me.dodo.readingnotes.dto.ReadingRecordRequest;
 import me.dodo.readingnotes.dto.ReadingRecordResponse;
 import me.dodo.readingnotes.service.ReadingRecordService;
 import me.dodo.readingnotes.util.JwtTokenProvider;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
 @RestController
 @RequestMapping("/records")
 public class ReadingRecordController {
+    private static final Logger log = LoggerFactory.getLogger(ReadingRecordController.class);
 
     private final ReadingRecordService service;
     private final JwtTokenProvider jwtTokenProvider;
@@ -45,12 +48,15 @@ public class ReadingRecordController {
             HttpServletRequest request,
             @RequestParam(name = "size", defaultValue = "3") int size
     ){
+        log.info("getMySummaryRecords");
+
         // 헤더에서 Authorization 추출
         String token = jwtTokenProvider.extractToken(request);
         // 토큰에서 userId 추출
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
         List<ReadingRecord> list = service.getLatestRecords(userId, size);
+        log.debug("list: {}", list.toString());
         return list.stream().map(ReadingRecordResponse::new).collect(Collectors.toList());
     }
 

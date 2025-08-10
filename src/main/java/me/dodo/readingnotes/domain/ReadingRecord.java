@@ -64,6 +64,19 @@ public class ReadingRecord {
         if (matchStatus == null) matchStatus = MatchStatus.PENDING;
     }
 
+    @Override
+    public String toString() {
+        return "ReadingRecord{" +
+                "id=" + id +
+                ", title='" + rawTitle + '\'' +
+                ", author='" + rawAuthor + '\'' +
+                ", sentence='" + sentence + '\'' +
+                ", comment='" + comment + '\'' +
+                ", matchStatus=" + matchStatus +
+                ", recordedAt=" + recordedAt +
+                '}';
+    }
+
     // Getter / Setter
     public Long getId() {
         return id;

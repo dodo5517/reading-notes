@@ -29,14 +29,20 @@ public class ReadingRecordResponse {
         if (isResolved && book != null) {
             this.title = book.getTitle();
             this.author = book.getAuthor();
+            this.sentence = r.getSentence();
+            this.comment = r.getComment();
             this.matched = true;
             this.bookId = book.getId();
+            this.recordedAt = r.getRecordedAt();
         } else {
             // 매칭되지 않은 상태라면 raw 사용
             this.title = r.getRawTitle();
             this.author = r.getRawAuthor();
+            this.sentence = r.getSentence();
+            this.comment = r.getComment();
             this.matched = false;
             this.bookId = null;
+            this.recordedAt = r.getRecordedAt();
         }
     }
 
