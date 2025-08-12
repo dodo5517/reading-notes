@@ -1,0 +1,25 @@
+package me.dodo.readingnotes.controller;
+
+import jakarta.validation.Valid;
+import me.dodo.readingnotes.dto.LinkBookRequest;
+import me.dodo.readingnotes.service.BookLinkService;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+@RestController
+@RequestMapping("/records")
+public class RecordLinkController {
+
+    private final BookLinkService bookLinkService;
+
+    public RecordLinkController(BookLinkService bookLinkService) {
+        this.bookLinkService = bookLinkService;
+    }
+
+    // 매칭 확정
+    @PostMapping("/{id}/link")
+    public ResponseEntity<Void> link(@PathVariable Long id, @RequestBody @Valid LinkBookRequest req) {
+        bookLinkService.linkRecord(id, req);
+        return ResponseEntity.noContent().build();
+    }
+}
