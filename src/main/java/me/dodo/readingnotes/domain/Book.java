@@ -17,7 +17,7 @@ public class Book {
     @Column(nullable = false, length = 255)
     private String title;
 
-    @Column(length = 255)
+    @Column(nullable = false, length = 255)
     private String author;
 
     @Column(length = 255)

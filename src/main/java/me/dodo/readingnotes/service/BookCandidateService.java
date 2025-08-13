@@ -3,6 +3,8 @@ package me.dodo.readingnotes.service;
 import me.dodo.readingnotes.dto.BookCandidate;
 import me.dodo.readingnotes.external.BookSearchClient;
 import org.apache.commons.text.similarity.LevenshteinDistance;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.util.Comparator;
@@ -11,6 +13,7 @@ import java.util.stream.Collectors;
 
 @Service
 public class BookCandidateService {
+    private static final Logger log = LoggerFactory.getLogger(BookCandidateService.class);
 
     private final List<BookSearchClient> clients;
 
@@ -29,10 +32,12 @@ public class BookCandidateService {
             // 정규화(소문자로 통일, 공백과 문장부호는 제거)
             // 레벤슈타인 거리 알고리즘 사용
             double t = similarity(norm(rawTitle), norm(c.getTitle()));
-            double a = similarity(norm(rawAuthor), norm(firstAuthor(c)));
+            double a = similarity(norm(rawAuthor), norm(c.getAuthor()));
             // 제목을 0.7로 더 중요하게 반영함.
             c.setScore(0.7 * t + 0.3 * a);
         }
+
+        log.debug(merged.toString());
 
         // 점수가 높은 순으로 정렬
         return merged.stream()
@@ -40,11 +45,6 @@ public class BookCandidateService {
                 // 최대 반환 개수는 20개로 제한
                 .limit(Math.min(limit, 20))
                 .collect(Collectors.toList());
-    }
-
-    // 저자 후보 리스트가 있으면 첫 번째 저자만 사용함.(대부분 잘 맞음)
-    private String firstAuthor(BookCandidate c) {
-        return (c.getAuthors() != null && !c.getAuthors().isEmpty()) ? c.getAuthors().get(0) : "";
     }
 
     // 소문자화, 문자부호/공백 제거

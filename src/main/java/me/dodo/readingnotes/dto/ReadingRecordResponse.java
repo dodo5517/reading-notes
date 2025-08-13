@@ -13,6 +13,7 @@ public class ReadingRecordResponse {
     private String comment;
     private Boolean matched;
     private Long bookId;
+    private String coverUrl;
     private LocalDateTime recordedAt;
 
     public ReadingRecordResponse(ReadingRecord r) {
@@ -33,6 +34,7 @@ public class ReadingRecordResponse {
             this.comment = r.getComment();
             this.matched = true;
             this.bookId = book.getId();
+            this.coverUrl = book.getCoverUrl();
             this.recordedAt = r.getRecordedAt();
         } else {
             // 매칭되지 않은 상태라면 raw 사용
@@ -42,6 +44,7 @@ public class ReadingRecordResponse {
             this.comment = r.getComment();
             this.matched = false;
             this.bookId = null;
+            this.coverUrl = null;
             this.recordedAt = r.getRecordedAt();
         }
     }
@@ -53,5 +56,6 @@ public class ReadingRecordResponse {
     public String getComment() { return comment; }
     public Boolean getMatched() { return matched; }
     public Long getBookId() { return bookId; }
+    public String getCoverUrl() { return coverUrl; }
     public LocalDateTime getRecordedAt() { return recordedAt; }
 }

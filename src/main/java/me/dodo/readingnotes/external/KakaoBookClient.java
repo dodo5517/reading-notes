@@ -1,6 +1,8 @@
 package me.dodo.readingnotes.external;
 
 import me.dodo.readingnotes.dto.BookCandidate;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
@@ -13,7 +15,7 @@ import java.util.stream.Collectors;
 
 @Component
 public class KakaoBookClient implements BookSearchClient {
-
+    private static final Logger log = LoggerFactory.getLogger(KakaoBookClient.class);
     private final WebClient webClient;
 
     @Value("${external.kakao.book.search-path:/v3/search/book}")
@@ -32,6 +34,7 @@ public class KakaoBookClient implements BookSearchClient {
         // 카카오 API size 허용 범위를 1~50개로.
         int size = Math.min(Math.max(limit, 1), 50);
 
+        // 책 검색
         KakaoResponse resp = webClient.get()
                 .uri(uri -> uri.path(searchPath)
                         .queryParam("query", query)
@@ -47,6 +50,8 @@ public class KakaoBookClient implements BookSearchClient {
 
         if (resp == null || resp.documents == null) return List.of();
 
+        log.debug("Kakao API response: {}", resp.documents.toString());
+
         // BookCandidate로 변환
         return resp.documents.stream().map(this::toCandidate).collect(Collectors.toList());
     }
@@ -55,7 +60,7 @@ public class KakaoBookClient implements BookSearchClient {
         BookCandidate c = new BookCandidate();
         c.setSource(getSource());
         c.setTitle(d.title);
-        c.setAuthors(d.authors != null ? Arrays.asList(d.authors) : List.of());
+        c.setAuthor(joinAuthor(d.authors));
         // externalId: 카카오는 별도 ID가 없어서 url 또는 isbn13 활용
         c.setExternalId(d.url != null ? d.url : d.isbn);
 
@@ -75,7 +80,17 @@ public class KakaoBookClient implements BookSearchClient {
         c.setPublishedDate(parseDate(d.datetime));
         c.setThumbnailUrl(d.thumbnail);
         c.setScore(0.0);
+
+        log.debug("kakaoBook BookCandidate: {}", c.toString());
         return c;
+    }
+
+    // author 리스트를 "A, B"로 합치기 (null/빈 처리 포함)
+    private static String joinAuthor(List<String> author) {
+        if (author == null || author.isEmpty()) return "";
+        return author.stream()
+                .filter(a -> a != null && !a.trim().isEmpty())
+                .collect(Collectors.joining(", "));
     }
 
     // 날짜 파싱("2020-01-02T10:20:30.000+09:00" 같은 문자열을 LocalDate(앞 10자리)로 파싱함.)
@@ -102,12 +117,18 @@ public class KakaoBookClient implements BookSearchClient {
         public String url;
         public String isbn;
         public String datetime;
-        public String[] authors;
+        // 카카오는 authors로 줌.
+        public List<String> authors;
         public String publisher;
         public String[] translators;
         public Integer price;
         public Integer sale_price;
         public String thumbnail;
         public String status;
+
+        @Override
+        public String toString() {
+            return "Document{title='" + title + "', authors=" + authors + ", isbn='" + isbn + "'}";
+        }
     }
 }

@@ -27,7 +27,7 @@ public class BookSourceLink {
     @Column(nullable = false, length = 20)
     private String source; // "KAKAO" / "NAVER" / "GOOGLE"
 
-    @Column(name = "external_id", length = 128)
+    @Column(name = "external_id", length = 512)
     private String externalId;
 
     @Column(length = 10)

@@ -7,14 +7,18 @@ import me.dodo.readingnotes.dto.LinkBookRequest;
 import me.dodo.readingnotes.repository.BookRepository;
 import me.dodo.readingnotes.repository.BookSourceLinkRepository;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.util.stream.Collectors;
 
 @Service
 public class BookLinkService {
+    private static final Logger log = LoggerFactory.getLogger(BookLinkService.class.getName());
 
     private final BookRepository bookRepo;
     private final BookSourceLinkRepository linkRepo;
@@ -64,6 +68,8 @@ public class BookLinkService {
         b.setCoverUrl(r.getCoverUrl());
         // 날짜 파싱해서 저장
         b.setPublishedDate(parseFlexible(r.getPublishedDate()));
+
+        log.debug("book: {}", b.toString());
         return b;
     }
 
