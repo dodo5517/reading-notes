@@ -3,6 +3,7 @@ package me.dodo.readingnotes.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import me.dodo.readingnotes.config.ApiKeyFilter;
 import me.dodo.readingnotes.domain.ReadingRecord;
+import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
 import me.dodo.readingnotes.dto.ReadingRecordRequest;
 import me.dodo.readingnotes.dto.ReadingRecordResponse;
 import me.dodo.readingnotes.service.ReadingRecordService;
@@ -72,6 +73,22 @@ public class ReadingRecordController {
 
         Page<ReadingRecord> page = service.getMyRecords(userId, pageable);
         return page.map(ReadingRecordResponse::new);
+    }
+
+    // 해당 유저가 읽은 책 중 매핑이 끝난 N(default=20)개 책들 보기
+    // 메인 화면은 프론트에서 8개로 요청함.
+    @GetMapping("/me/books")
+    public Page<BookWithLastRecordResponse> getMyConfirmedBooks(
+            HttpServletRequest request,
+            @RequestParam(value = "q",required = false) String q,
+            @RequestParam(value = "page", defaultValue = "0") int page,
+            @RequestParam(value = "size", defaultValue = "20") int size
+    ) {
+        String token = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        Pageable pageable = PageRequest.of(page, size);
+        return service.getConfirmedBooks(userId, q, pageable);
     }
 
     // author도 넣어서 post하는 경우

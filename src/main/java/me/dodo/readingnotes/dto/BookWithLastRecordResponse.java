@@ -10,7 +10,7 @@ public class BookWithLastRecordResponse extends BookResponse {
     public BookWithLastRecordResponse(
             Long bookId, String title, String author, String isbn10,
             String isbn13, String coverUrl, LocalDateTime lastRecordAt) {
-        super(bookId, author, isbn10, isbn13, coverUrl);
+        super(bookId, title, author, isbn10, isbn13, coverUrl);
         this.lastRecordAt = lastRecordAt;
 
     }

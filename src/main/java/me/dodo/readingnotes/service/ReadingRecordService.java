@@ -2,7 +2,9 @@ package me.dodo.readingnotes.service;
 
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.domain.User;
+import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
 import me.dodo.readingnotes.dto.ReadingRecordRequest;
+import me.dodo.readingnotes.repository.BookRepository;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
 import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,12 +23,14 @@ public class ReadingRecordService {
 
     private final ReadingRecordRepository readingRecordRepository;
     private final UserRepository userRepository;
+    private final BookRepository bookRepository;
 
     @Autowired
     public ReadingRecordService(ReadingRecordRepository readingRecordRepository,
-                                UserRepository userRepository) {
+                                UserRepository userRepository, BookRepository bookRepository) {
         this.readingRecordRepository = readingRecordRepository;
         this.userRepository = userRepository;
+        this.bookRepository = bookRepository;
     }
 
     @Transactional
@@ -55,6 +59,12 @@ public class ReadingRecordService {
     // 해당 유저의 모든 기록 불러오기
     public Page<ReadingRecord> getMyRecords(Long userId, Pageable pageable) {
         return readingRecordRepository.findByUser_IdOrderByRecordedAtDesc(userId, pageable);
+    }
+
+    // 매칭이 끝난 해당 유저의 책 리스트 불러오기
+    @Transactional(readOnly = true)
+    public Page<BookWithLastRecordResponse> getConfirmedBooks(Long userId, String q, Pageable pageable) {
+        return readingRecordRepository.findConfirmedBooksOfUser(userId, q, pageable);
     }
 
     // 기록 저장

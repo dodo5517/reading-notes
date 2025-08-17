@@ -13,8 +13,9 @@ public class BookResponse {
     public BookResponse(Book book) {
     }
 
-    public BookResponse(Long bookId, String author, String isbn10, String isbn13, String coverUrl) {
+    public BookResponse(Long bookId, String title, String author, String isbn10, String isbn13, String coverUrl) {
         this.id = bookId;
+        this.title = title;
         this.author = author;
         this.isbn10 = isbn10;
         this.isbn13 = isbn13;
