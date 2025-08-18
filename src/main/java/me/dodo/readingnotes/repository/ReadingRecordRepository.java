@@ -30,21 +30,11 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     List<ReadingRecord> findLatestByUser(@Param("userId") Long userId, Pageable pageable);
 
     // 해당 유저가 기록한 책 중에서 매칭이 끝난 책만 가져옴.
-    @Query(value = """
-            select new me.dodo.readingnotes.dto.BookWithLastRecordResponse(
-                b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
-            )
-            from ReadingRecord r join r.book b
-            where r.user.id = :userId
-              and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
-                                    me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
-              and (:q is null
-                   or lower(b.title) like lower(concat('%', :q, '%'))
-                   or lower(b.author) like lower(concat('%', :q, '%')))
-            group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
-            order by max(r.recordedAt) desc
-            """, countQuery = """
-        select count(distinct b.id)
+    // 최근 기록순
+    @Query("""
+        select new me.dodo.readingnotes.dto.BookWithLastRecordResponse(
+            b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
+        )
         from ReadingRecord r join r.book b
         where r.user.id = :userId
           and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
@@ -52,8 +42,26 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
           and (:q is null
                or lower(b.title) like lower(concat('%', :q, '%'))
                or lower(b.author) like lower(concat('%', :q, '%')))
+        group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
+        order by max(r.recordedAt) desc
         """)
-    Page<BookWithLastRecordResponse> findConfirmedBooksOfUser(Long userId, String q, Pageable pageable);
+    Page<BookWithLastRecordResponse> findConfirmedBooksByRecent(Long userId, String q, Pageable pageable);
+    // 제목순
+    @Query("""
+select new me.dodo.readingnotes.dto.BookWithLastRecordResponse(
+    b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
+)
+from ReadingRecord r join r.book b
+where r.user.id = :userId
+  and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
+                        me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
+  and (:q is null
+       or lower(b.title) like lower(concat('%', :q, '%'))
+       or lower(b.author) like lower(concat('%', :q, '%')))
+group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
+order by b.title asc
+""")
+    Page<BookWithLastRecordResponse> findConfirmedBooksByTitle(Long userId, String q, Pageable pageable);
 }
 
 

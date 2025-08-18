@@ -82,13 +82,15 @@ public class ReadingRecordController {
             HttpServletRequest request,
             @RequestParam(value = "q",required = false) String q,
             @RequestParam(value = "page", defaultValue = "0") int page,
-            @RequestParam(value = "size", defaultValue = "20") int size
+            @RequestParam(value = "size", defaultValue = "20") int size,
+            @RequestParam(value = "sort", defaultValue = "recent") String sort
     ) {
         String token = jwtTokenProvider.extractToken(request);
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
         Pageable pageable = PageRequest.of(page, size);
-        return service.getConfirmedBooks(userId, q, pageable);
+
+        return service.getConfirmedBooks(userId, q, pageable, sort);
     }
 
     // author도 넣어서 post하는 경우

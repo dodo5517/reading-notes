@@ -61,10 +61,13 @@ public class ReadingRecordService {
         return readingRecordRepository.findByUser_IdOrderByRecordedAtDesc(userId, pageable);
     }
 
-    // 매칭이 끝난 해당 유저의 책 리스트 불러오기
+    // 해당 유저의 매칭 끝난 책 리스트 불러오기
     @Transactional(readOnly = true)
-    public Page<BookWithLastRecordResponse> getConfirmedBooks(Long userId, String q, Pageable pageable) {
-        return readingRecordRepository.findConfirmedBooksOfUser(userId, q, pageable);
+    public Page<BookWithLastRecordResponse> getConfirmedBooks(Long userId, String q, Pageable pageable, String sort) {
+        if ("title".equalsIgnoreCase(sort)) {
+            return readingRecordRepository.findConfirmedBooksByTitle(userId, q, pageable);
+        }
+        return readingRecordRepository.findConfirmedBooksByRecent(userId, q, pageable);
     }
 
     // 기록 저장
