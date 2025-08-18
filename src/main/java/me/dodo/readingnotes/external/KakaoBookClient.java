@@ -28,8 +28,8 @@ public class KakaoBookClient implements BookSearchClient {
     @Override
     public List<BookCandidate> search(String rawTitle, String rawAuthor, int limit) {
         String query = (rawAuthor == null || rawAuthor.isBlank())
-                ? rawTitle
-                : rawTitle + " " + rawAuthor;
+                ? "\"" + rawTitle + "\""
+                : "\"" + rawTitle + "\" \"" + rawAuthor + "\"";
 
         // 카카오 API size 허용 범위를 1~50개로.
         int size = Math.min(Math.max(limit, 1), 50);
@@ -39,6 +39,7 @@ public class KakaoBookClient implements BookSearchClient {
                 .uri(uri -> uri.path(searchPath)
                         .queryParam("query", query)
                         .queryParam("size", size)
+                        .queryParam("sort", "accuracy") // 정확도순으로 정렬
                         .build())
                 .retrieve()
                 // 4xx/5xx 응답을 에러로 변환함

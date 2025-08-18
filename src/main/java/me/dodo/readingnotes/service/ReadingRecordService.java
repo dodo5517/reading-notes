@@ -2,9 +2,11 @@ package me.dodo.readingnotes.service;
 
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.domain.User;
+import me.dodo.readingnotes.dto.BookCandidate;
 import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
+import me.dodo.readingnotes.dto.LinkBookRequest;
 import me.dodo.readingnotes.dto.ReadingRecordRequest;
-import me.dodo.readingnotes.repository.BookRepository;
+import me.dodo.readingnotes.external.KakaoBookClient;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
 import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,20 +19,26 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class ReadingRecordService {
 
     private final ReadingRecordRepository readingRecordRepository;
     private final UserRepository userRepository;
-    private final BookRepository bookRepository;
+    private final KakaoBookClient kakaoBookClient;
+    private final BookMatcherService bookMatcherService;
+    private final BookLinkService bookLinkService;
 
     @Autowired
     public ReadingRecordService(ReadingRecordRepository readingRecordRepository,
-                                UserRepository userRepository, BookRepository bookRepository) {
+                                UserRepository userRepository, KakaoBookClient kakaoBookClient,
+                                BookMatcherService bookMatcherService, BookLinkService bookLinkService) {
         this.readingRecordRepository = readingRecordRepository;
         this.userRepository = userRepository;
-        this.bookRepository = bookRepository;
+        this.kakaoBookClient = kakaoBookClient;
+        this.bookMatcherService = bookMatcherService;
+        this.bookLinkService = bookLinkService;
     }
 
     @Transactional
@@ -47,7 +55,60 @@ public class ReadingRecordService {
         record.setRecordedAt(LocalDateTime.now());
         record.setUpdatedAt(LocalDateTime.now());
 
-        return readingRecordRepository.save(record);
+        ReadingRecord saved = readingRecordRepository.save(record);
+
+
+        // 제목+작가 모두 있을 경우
+        if (present(saved.getRawTitle()) && present(saved.getRawAuthor())) {
+            // Kakao 검색
+            List<BookCandidate> candidates = kakaoBookClient.search(saved.getRawTitle(), saved.getRawAuthor(), 10);
+
+            // BookMatcher로 베스트 선택
+            BookMatcherService.MatchResult result =
+                    bookMatcherService.pickBest(saved.getRawTitle(), saved.getRawAuthor(), candidates);
+
+            // 자동 확정이면 저장 진입점으로 위임
+            if (result.best != null && result.autoMatch) {
+                //검색결과 DTO → 저장 명령 DTO 변환
+                LinkBookRequest reqDto = LinkBookRequest.fromCandidate(result.best);
+
+                // 스냅샷(근거 데이터) JSON 구성
+                Map<String, Object> snapshot = Map.of(
+                        "provider", reqDto.getSource(), // "KAKAO"
+                        "score", result.score,
+                        "query", Map.of("title", saved.getRawTitle(), "author", saved.getRawAuthor()),
+                        "candidate", Map.of(
+                                "title", result.best.getTitle(),
+                                "author", result.best.getAuthor(),
+                                "isbn10", result.best.getIsbn10(),
+                                "isbn13", result.best.getIsbn13(),
+                                "publisher", result.best.getPublisher(),
+                                "publishedDate", result.best.getPublishedDate() == null ? null : result.best.getPublishedDate().toString(),
+                                "thumbnailUrl", result.best.getThumbnailUrl(),
+                                "externalId", result.best.getExternalId()
+                        ),
+                        "matcher", Map.of(
+                                "threshold", 0.88,
+                                "weights", Map.of("title", 0.7, "author", 0.3),
+                                "version", "2025-08-18"
+                        )
+                );
+                String snapshotJson = toJsonSafe(snapshot); // 아래 유틸 참고
+
+                // Book/Link/Record 한 번에 처리
+                bookLinkService.linkRecordAuto(saved.getId(), reqDto, result.score, snapshotJson);
+            }
+        }
+        return saved;
+    }
+    private boolean present(String s) { return s != null && !s.isBlank(); }
+    // 간단 버전: 필요시 Jackson 빈 주입으로 교체(아래 참고)
+    private String toJsonSafe(Object obj) {
+        try {
+            return new com.fasterxml.jackson.databind.ObjectMapper().writeValueAsString(obj);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
     // 해당 유저의 최신 N개 기록 불러오기

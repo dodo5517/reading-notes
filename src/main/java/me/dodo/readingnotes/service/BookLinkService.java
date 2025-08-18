@@ -13,8 +13,8 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.stream.Collectors;
 
 @Service
 public class BookLinkService {
@@ -32,6 +32,7 @@ public class BookLinkService {
         this.recordRepo = recordRepo;
     }
 
+    // 책 수동 매칭
     @Transactional
     public void linkRecord(Long recordId, LinkBookRequest req) {
         // Book upsert (ISBN13 우선)
@@ -44,7 +45,25 @@ public class BookLinkService {
         ReadingRecord rec = recordRepo.findById(recordId)
                 .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 recordId 입니다."));
         rec.setBook(book); // 기록 엔티티에 책 정보 저장
-        rec.setMatchStatus(ReadingRecord.MatchStatus.RESOLVED_MANUAL); // 책 매칭 완료
+        rec.setMatchStatus(ReadingRecord.MatchStatus.RESOLVED_MANUAL); // 책 수동 매칭 완료
+        rec.setMatchedAt(LocalDateTime.now()); // 매칭된 시간 저장
+    }
+
+    // 책 자동 매칭
+    @Transactional
+    public void linkRecordAuto(Long recordId, LinkBookRequest req, Double score, String providerPayloadJson) {
+        // Book upsert (ISBN13 우선)
+        Book book = upsertBook(req);
+
+        // Source link upsert
+        upsertSourceLink(book, req, score, providerPayloadJson);
+
+        // 기록 연결 + 상태 자동
+        ReadingRecord rec = recordRepo.findById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 recordId 입니다."));
+        rec.setBook(book); // 기록 엔티티에 책 정보 저장
+        rec.setMatchStatus(ReadingRecord.MatchStatus.RESOLVED_AUTO); // 책 자동 매칭 완료
+        rec.setMatchedAt(LocalDateTime.now()); // 매칭된 시간 저장
     }
 
     // Book upsert
@@ -74,7 +93,7 @@ public class BookLinkService {
     }
 
     // SourceLink upsert
-    private void upsertSourceLink(Book book, LinkBookRequest r) {
+    private void upsertSourceLink(Book book, LinkBookRequest r, Double score, String metaJson) {
         if (r.getSource() == null) return;
         // 기존 값 없으면 새로 생성
         BookSourceLink link = linkRepo.findBySourceAndExternalId(r.getSource(), r.getExternalId())
@@ -84,9 +103,17 @@ public class BookLinkService {
         link.setExternalId(r.getExternalId());
         link.setIsbn10(r.getIsbn10());
         link.setIsbn13(r.getIsbn13());
-        link.setMetaJson(null);
+        // 자동 매칭이라면 점수/원문 스냅샷을 남겨 추적 가능하게 함
+        if (metaJson != null && !metaJson.isBlank()) {
+            // 기존 수동 흐름과 충돌하지 않게 누적 또는 덮어쓰기 전략 택1
+            link.setMetaJson(metaJson);
+        }
         link.setSyncedAt(java.time.LocalDateTime.now());
         linkRepo.save(link);
+    }
+    // 수동 매칭 시 사용
+    private void upsertSourceLink(Book book, LinkBookRequest r) {
+        upsertSourceLink(book, r, null, null);
     }
     
     // 날짜 파싱

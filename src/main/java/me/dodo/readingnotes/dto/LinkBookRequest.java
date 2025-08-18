@@ -30,4 +30,22 @@ public class LinkBookRequest {
     public void setCoverUrl(String coverUrl) { this.coverUrl = coverUrl; }
     public String getPublishedDate() { return publishedDate; }
     public void setPublishedDate(String publishedDate) { this.publishedDate = publishedDate; }
+
+    public static LinkBookRequest fromCandidate(BookCandidate c) {
+        LinkBookRequest r = new LinkBookRequest();
+        r.setTitle(c.getTitle());
+        r.setAuthor(c.getAuthor());
+        r.setPublisher(c.getPublisher());
+        r.setIsbn10(c.getIsbn10());
+        r.setIsbn13(c.getIsbn13());
+        r.setCoverUrl(c.getThumbnailUrl());
+        r.setPublishedDate(c.getPublishedDate() != null ? c.getPublishedDate().toString() : null);
+        r.setSource(c.getSource());
+        r.setExternalId(
+                c.getExternalId() != null && !c.getExternalId().isBlank()
+                        ? c.getExternalId()
+                        : c.getIsbn13()
+        );
+        return r;
+    }
 }
