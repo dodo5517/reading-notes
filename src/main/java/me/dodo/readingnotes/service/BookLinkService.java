@@ -66,7 +66,7 @@ public class BookLinkService {
         rec.setMatchedAt(LocalDateTime.now()); // 매칭된 시간 저장
     }
 
-    // Book upsert
+    // Book 엔티티에 upsert
     private Book upsertBook(LinkBookRequest r) {
         if (r.getIsbn13() != null && !r.getIsbn13().isBlank()) {
             return bookRepo.findByIsbn13(r.getIsbn13())
@@ -92,7 +92,7 @@ public class BookLinkService {
         return b;
     }
 
-    // SourceLink upsert
+    // BookSourceLink 엔티티에 upsert
     private void upsertSourceLink(Book book, LinkBookRequest r, Double score, String metaJson) {
         if (r.getSource() == null) return;
         // 기존 값 없으면 새로 생성
@@ -114,6 +114,16 @@ public class BookLinkService {
     // 수동 매칭 시 사용
     private void upsertSourceLink(Book book, LinkBookRequest r) {
         upsertSourceLink(book, r, null, null);
+    }
+
+    // 책 연결 끊기
+    @Transactional
+    public void removeBookMatch(Long recordId) {
+        ReadingRecord rec = recordRepo.findById(recordId)
+                .orElseThrow(() -> new IllegalArgumentException("유효하지 않은 recordId 입니다."));
+        rec.setBook(null);
+        rec.setMatchStatus(ReadingRecord.MatchStatus.PENDING); // 비매칭으로 상태 변경
+        rec.setMatchedAt(LocalDateTime.now()); // 매칭상태 변경된 시간 저장
     }
     
     // 날짜 파싱

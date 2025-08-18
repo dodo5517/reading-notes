@@ -18,8 +18,15 @@ public class RecordLinkController {
 
     // 매칭 확정
     @PostMapping("/{id}/link")
-    public ResponseEntity<Void> link(@PathVariable Long id, @RequestBody @Valid LinkBookRequest req) {
+    public Boolean link(@PathVariable Long id, @RequestBody @Valid LinkBookRequest req) {
         bookLinkService.linkRecord(id, req);
-        return ResponseEntity.noContent().build();
+        return true;
+    }
+
+    // 매핑 정보 삭제
+    @PostMapping("/{id}/remove")
+    public Boolean remove(@PathVariable Long id) {
+        bookLinkService.removeBookMatch(id);
+        return true;
     }
 }
