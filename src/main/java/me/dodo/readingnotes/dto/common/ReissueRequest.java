@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.common;
 
 import jakarta.validation.constraints.NotBlank;
 

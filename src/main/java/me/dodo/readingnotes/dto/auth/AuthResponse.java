@@ -1,4 +1,5 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.auth;
+import me.dodo.readingnotes.dto.user.UserResponse;
 
 public class AuthResponse {
     private final String message;

@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.user;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;

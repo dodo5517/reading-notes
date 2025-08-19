@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.common;
 
 public class ErrorResponse {
     private String errorCode;

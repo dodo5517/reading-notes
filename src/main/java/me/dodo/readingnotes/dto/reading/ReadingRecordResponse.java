@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.reading;
 
 import me.dodo.readingnotes.domain.Book;
 import me.dodo.readingnotes.domain.ReadingRecord;

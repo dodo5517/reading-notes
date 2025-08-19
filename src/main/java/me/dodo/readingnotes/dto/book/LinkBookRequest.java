@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.book;
 
 public class LinkBookRequest {
     private String source;       // "KAKAO"

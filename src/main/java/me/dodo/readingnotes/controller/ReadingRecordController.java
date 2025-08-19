@@ -3,9 +3,10 @@ package me.dodo.readingnotes.controller;
 import jakarta.servlet.http.HttpServletRequest;
 import me.dodo.readingnotes.config.ApiKeyFilter;
 import me.dodo.readingnotes.domain.ReadingRecord;
-import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
-import me.dodo.readingnotes.dto.ReadingRecordRequest;
-import me.dodo.readingnotes.dto.ReadingRecordResponse;
+import me.dodo.readingnotes.dto.book.BookRecordsPageResponse;
+import me.dodo.readingnotes.dto.book.BookWithLastRecordResponse;
+import me.dodo.readingnotes.dto.reading.ReadingRecordRequest;
+import me.dodo.readingnotes.dto.reading.ReadingRecordResponse;
 import me.dodo.readingnotes.service.ReadingRecordService;
 import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger;
@@ -91,6 +92,20 @@ public class ReadingRecordController {
         Pageable pageable = PageRequest.of(page, size);
 
         return service.getConfirmedBooks(userId, q, pageable, sort);
+    }
+
+    // 해당 유저가 기록한 책 한 권에 대한 모든 기록 불러오기
+    @GetMapping("/books/{bookId}")
+    public BookRecordsPageResponse getBookRecords(
+            @PathVariable Long bookId,
+            @RequestParam(required = false) String cursor,
+            @RequestParam(defaultValue = "20") int size,
+            HttpServletRequest request
+    ) {
+        String token = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        return service.getBookRecordsByCursor(userId, bookId, cursor, size);
     }
 
     // author도 넣어서 post하는 경우

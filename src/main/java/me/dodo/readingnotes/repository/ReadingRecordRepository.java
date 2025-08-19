@@ -1,13 +1,14 @@
 package me.dodo.readingnotes.repository;
 
 import me.dodo.readingnotes.domain.ReadingRecord;
-import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
+import me.dodo.readingnotes.dto.book.BookWithLastRecordResponse;
 import org.springframework.data.domain.*;
 import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Long> {
@@ -18,6 +19,25 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     // N+1 줄이기 위해서 book을 EntityGraph로 로딩함.
     @EntityGraph(attributePaths = "book")
     Page<ReadingRecord> findByUser_IdOrderByRecordedAtDesc(Long userId, Pageable pageable);
+
+    // 해당 유저의 특정 책 찾기
+    @Query("""
+        select r
+          from ReadingRecord r
+         where r.user.id = :userId
+           and r.book.id = :bookId
+           and ( :cursorAt is null
+                 or r.recordedAt < :cursorAt
+                 or (r.recordedAt = :cursorAt and r.id < :cursorId) )
+         order by r.recordedAt desc, r.id desc
+    """)
+    List<ReadingRecord> findSliceByUserAndBookWithCursor(
+            Long userId,
+            Long bookId,
+            LocalDateTime cursorAt,
+            Long cursorId,
+            Pageable pageable
+    );
 
     // 해당 유저의 기록 중 최신 N개만 가져옴,  count 쿼리 없음.
     // 페이지네이션 필요 없으니 굳이 Page 안 쓰고 List로 반환
@@ -32,7 +52,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     // 해당 유저가 기록한 책 중에서 매칭이 끝난 책만 가져옴.
     // 최근 기록순
     @Query("""
-        select new me.dodo.readingnotes.dto.BookWithLastRecordResponse(
+        select new me.dodo.readingnotes.dto.book.BookWithLastRecordResponse(
             b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
         )
         from ReadingRecord r join r.book b
@@ -48,7 +68,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     Page<BookWithLastRecordResponse> findConfirmedBooksByRecent(Long userId, String q, Pageable pageable);
     // 제목순
     @Query("""
-select new me.dodo.readingnotes.dto.BookWithLastRecordResponse(
+select new me.dodo.readingnotes.dto.book.BookWithLastRecordResponse(
     b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
 )
 from ReadingRecord r join r.book b

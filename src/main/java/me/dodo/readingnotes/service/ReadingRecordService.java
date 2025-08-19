@@ -1,12 +1,13 @@
 package me.dodo.readingnotes.service;
 
+import me.dodo.readingnotes.domain.Book;
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.domain.User;
-import me.dodo.readingnotes.dto.BookCandidate;
-import me.dodo.readingnotes.dto.BookWithLastRecordResponse;
-import me.dodo.readingnotes.dto.LinkBookRequest;
-import me.dodo.readingnotes.dto.ReadingRecordRequest;
+import me.dodo.readingnotes.dto.book.*;
+import me.dodo.readingnotes.dto.reading.ReadingRecordItem;
+import me.dodo.readingnotes.dto.reading.ReadingRecordRequest;
 import me.dodo.readingnotes.external.KakaoBookClient;
+import me.dodo.readingnotes.repository.BookRepository;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
 import me.dodo.readingnotes.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,30 +18,41 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.Instant;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 @Service
 public class ReadingRecordService {
 
     private final ReadingRecordRepository readingRecordRepository;
     private final UserRepository userRepository;
+    private final BookRepository bookRepository;
     private final KakaoBookClient kakaoBookClient;
     private final BookMatcherService bookMatcherService;
     private final BookLinkService bookLinkService;
 
+    private static final int MAX_PAGE_SIZE = 30;
+    private static final ZoneId ZONE = ZoneId.of("Asia/Seoul");
+
     @Autowired
     public ReadingRecordService(ReadingRecordRepository readingRecordRepository,
+                                BookRepository bookRepository,
                                 UserRepository userRepository, KakaoBookClient kakaoBookClient,
                                 BookMatcherService bookMatcherService, BookLinkService bookLinkService) {
         this.readingRecordRepository = readingRecordRepository;
         this.userRepository = userRepository;
+        this.bookRepository = bookRepository;
         this.kakaoBookClient = kakaoBookClient;
         this.bookMatcherService = bookMatcherService;
         this.bookLinkService = bookLinkService;
     }
 
+    // 새로운 기록 생성
     @Transactional
     public ReadingRecord createByUserId(Long userId, ReadingRecordRequest req) {
         User user = userRepository.findById(userId)
@@ -129,6 +141,81 @@ public class ReadingRecordService {
             return readingRecordRepository.findConfirmedBooksByTitle(userId, q, pageable);
         }
         return readingRecordRepository.findConfirmedBooksByRecent(userId, q, pageable);
+    }
+
+    // 해당 유저가 기록한 책 한 권에 대한 기록 불러오기
+    @Transactional(readOnly = true)
+    public BookRecordsPageResponse getBookRecordsByCursor(Long userId, Long bookId, String cursor, int size) {
+        // 책 찾기
+        Book book = bookRepository.findById(bookId)
+                .orElseThrow(() -> new IllegalArgumentException("존재하지 않는 책입니다."));
+
+        // size 정규화
+        int pageSize = normalizeSize(size);
+        Cursor c = parseCursor(cursor);
+
+        // 기록 시간 내림차순 → id 내림차순.
+        Sort sort = Sort.by("recordedAt").descending().and(Sort.by("id").descending());
+        // 커서가 있다면 커서보다 더 작은(과거) 레코드만 가져옴.
+        List<ReadingRecord> fetched = readingRecordRepository.findSliceByUserAndBookWithCursor(
+                userId, bookId, c.cursorAt, c.cursorId, PageRequest.of(0, pageSize + 1, sort)
+        );
+
+        // 기록이 더 남았는지 확인(남았으면=true, 안 남았으면=false)
+        boolean hasMore = fetched.size() > pageSize;
+        // 더 남았어도 pageSize만큼만 가져옴
+        if (hasMore) fetched = new ArrayList<>(fetched.subList(0, pageSize));
+
+        // 현재 페이지의 마지막 요소의 (recordedAt, id)를 커서 문자열(“epochMillis_id”)로 직렬화하여 반환
+        String nextCursor = null;
+        if (hasMore && !fetched.isEmpty()) {
+            ReadingRecord last = fetched.get(fetched.size() - 1);
+            nextCursor = buildCursor(last.getRecordedAt(), last.getId());
+        }
+
+        // 책 정보 구성
+        BookMetaResponse bookMeta = new BookMetaResponse(
+                book.getId(),
+                book.getTitle(),
+                book.getAuthor(),
+                book.getPublisher(),
+                book.getPublishedDate() != null ? book.getPublishedDate().toString() : null,
+                book.getCoverUrl()
+        );
+
+        // 기록 정보 매핑
+        List<ReadingRecordItem> items = fetched.stream()
+                .map(r -> new ReadingRecordItem(r.getId(), r.getRecordedAt(), r.getSentence(), r.getComment()))
+                .toList();
+
+        return new BookRecordsPageResponse(bookMeta, items, nextCursor, hasMore);
+    }
+    // pageSize 최소/최대 규정
+    private int normalizeSize(int size) {
+        if (size <= 0) return 20;
+        return Math.min(size, MAX_PAGE_SIZE);
+    }
+    // cursorAt,id를 저장
+    private static class Cursor {
+        final LocalDateTime cursorAt;
+        final Long cursorId;
+        Cursor(LocalDateTime at, Long id) { this.cursorAt = at; this.cursorId = id; }
+    }
+    // "epochMillis_id" -> (LocalDateTime, id)로 변환
+    // null이면 첫 페이지라는 뜻임.
+    private Cursor parseCursor(String cursor) {
+        if (cursor == null || cursor.isBlank()) return new Cursor(null, null);
+        String[] parts = cursor.split("_");
+        if (parts.length != 2) throw new IllegalArgumentException("커서 형식이 올바르지 않습니다.");
+        long epochMillis = Long.parseLong(parts[0]);
+        long id = Long.parseLong(parts[1]);
+        LocalDateTime at = LocalDateTime.ofInstant(Instant.ofEpochMilli(epochMillis), ZONE);
+        return new Cursor(at, id);
+    }
+    // (recordedAt, id) -> "epochMillis_id"로 직렬화
+    private String buildCursor(LocalDateTime recordedAt, Long id) {
+        long epochMillis = recordedAt.atZone(ZONE).toInstant().toEpochMilli();
+        return epochMillis + "_" + id;
     }
 
     // 기록 저장

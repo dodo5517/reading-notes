@@ -7,7 +7,8 @@ import java.time.LocalDateTime;
 @Table(name = "reading_records", // DB에서 이 엔티티가 매핑될 테이블 이름을 지정함
     indexes = {
             // user_id로 먼저 좁히고 recorded_at으로 정렬(기본이 desc임)
-            @Index(name = "idx_rr_user_recorded", columnList = "user_id, recorded_at")
+            @Index(name = "idx_rr_user_recorded", columnList = "user_id, recorded_at"),
+            @Index(name = "idx_record_user_book_at_id", columnList = "user_id, book_id, recorded_at, id")
     })
 public class ReadingRecord {
 

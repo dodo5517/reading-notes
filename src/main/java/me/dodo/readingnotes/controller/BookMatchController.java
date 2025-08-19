@@ -1,7 +1,7 @@
 package me.dodo.readingnotes.controller;
 
 
-import me.dodo.readingnotes.dto.BookCandidate;
+import me.dodo.readingnotes.dto.book.BookCandidate;
 import me.dodo.readingnotes.service.BookCandidateService;
 import org.springframework.web.bind.annotation.*;
 

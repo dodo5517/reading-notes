@@ -1,7 +1,7 @@
 package me.dodo.readingnotes.exception;
 
 import io.jsonwebtoken.ExpiredJwtException;
-import me.dodo.readingnotes.dto.ErrorResponse;
+import me.dodo.readingnotes.dto.common.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.ExceptionHandler;

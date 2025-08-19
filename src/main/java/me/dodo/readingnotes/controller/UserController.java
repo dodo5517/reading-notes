@@ -2,7 +2,12 @@ package me.dodo.readingnotes.controller;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.validation.Valid;
-import me.dodo.readingnotes.dto.*;
+import me.dodo.readingnotes.dto.auth.ApiKeyResponse;
+import me.dodo.readingnotes.dto.common.MaskedApiKeyResponse;
+import me.dodo.readingnotes.dto.user.UpdatePasswordRequest;
+import me.dodo.readingnotes.dto.user.UpdateUsernameRequest;
+import me.dodo.readingnotes.dto.user.UserRequest;
+import me.dodo.readingnotes.dto.user.UserResponse;
 import me.dodo.readingnotes.repository.UserRepository;
 import me.dodo.readingnotes.service.S3Service;
 import me.dodo.readingnotes.service.UserService;

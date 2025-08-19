@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.user;
 
 import me.dodo.readingnotes.domain.User;
 

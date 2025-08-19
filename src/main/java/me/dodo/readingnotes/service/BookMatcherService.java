@@ -1,6 +1,6 @@
 package me.dodo.readingnotes.service;
 
-import me.dodo.readingnotes.dto.BookCandidate;
+import me.dodo.readingnotes.dto.book.BookCandidate;
 import org.apache.commons.text.similarity.JaroWinklerSimilarity;
 import org.springframework.stereotype.Service;
 

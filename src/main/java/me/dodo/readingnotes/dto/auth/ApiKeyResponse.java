@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.auth;
 
 public class ApiKeyResponse {
     private String message;
@@ -12,7 +12,7 @@ public class ApiKeyResponse {
     public String getMessage() {
         return message;
     }
-    public String getapiKey() {
+    public String getApiKey() {
         return apiKey;
     }
 }

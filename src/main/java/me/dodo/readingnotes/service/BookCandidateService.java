@@ -1,6 +1,6 @@
 package me.dodo.readingnotes.service;
 
-import me.dodo.readingnotes.dto.BookCandidate;
+import me.dodo.readingnotes.dto.book.BookCandidate;
 import me.dodo.readingnotes.external.BookSearchClient;
 import org.apache.commons.text.similarity.LevenshteinDistance;
 import org.slf4j.Logger;

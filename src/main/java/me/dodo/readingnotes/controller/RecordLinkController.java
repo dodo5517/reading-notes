@@ -1,9 +1,8 @@
 package me.dodo.readingnotes.controller;
 
 import jakarta.validation.Valid;
-import me.dodo.readingnotes.dto.LinkBookRequest;
+import me.dodo.readingnotes.dto.book.LinkBookRequest;
 import me.dodo.readingnotes.service.BookLinkService;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 @RestController

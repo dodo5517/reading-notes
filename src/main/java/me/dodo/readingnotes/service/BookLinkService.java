@@ -3,7 +3,7 @@ package me.dodo.readingnotes.service;
 import me.dodo.readingnotes.domain.Book;
 import me.dodo.readingnotes.domain.BookSourceLink;
 import me.dodo.readingnotes.domain.ReadingRecord;
-import me.dodo.readingnotes.dto.LinkBookRequest;
+import me.dodo.readingnotes.dto.book.LinkBookRequest;
 import me.dodo.readingnotes.repository.BookRepository;
 import me.dodo.readingnotes.repository.BookSourceLinkRepository;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;

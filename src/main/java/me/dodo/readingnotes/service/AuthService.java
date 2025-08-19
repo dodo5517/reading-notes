@@ -2,7 +2,7 @@ package me.dodo.readingnotes.service;
 
 import me.dodo.readingnotes.domain.RefreshToken;
 import me.dodo.readingnotes.domain.User;
-import me.dodo.readingnotes.dto.AuthResult;
+import me.dodo.readingnotes.dto.auth.AuthResult;
 import me.dodo.readingnotes.repository.RefreshTokenRepository;
 import me.dodo.readingnotes.repository.UserRepository;
 import me.dodo.readingnotes.util.DeviceInfoParser;

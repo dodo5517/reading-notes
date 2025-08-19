@@ -1,4 +1,4 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.auth;
 
 public class LoginRequest {
     private String email;

@@ -1,6 +1,6 @@
 package me.dodo.readingnotes.external;
 
-import me.dodo.readingnotes.dto.BookCandidate;
+import me.dodo.readingnotes.dto.book.BookCandidate;
 import java.util.List;
 
 public interface BookSearchClient {

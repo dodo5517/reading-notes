@@ -1,6 +1,7 @@
-package me.dodo.readingnotes.dto;
+package me.dodo.readingnotes.dto.book;
 
 import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
+import me.dodo.readingnotes.dto.common.AuthorsFlexibleDeserializer;
 
 import java.time.LocalDate;
 

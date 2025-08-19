@@ -1,6 +1,4 @@
-package me.dodo.readingnotes.dto;
-
-import java.time.LocalDateTime;
+package me.dodo.readingnotes.dto.reading;
 
 public class ReadingRecordRequest {
     private String rawTitle;

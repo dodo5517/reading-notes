@@ -1,6 +1,4 @@
-package me.dodo.readingnotes.dto;
-
-import me.dodo.readingnotes.domain.Book;
+package me.dodo.readingnotes.dto.book;
 
 import java.time.LocalDateTime;
 
