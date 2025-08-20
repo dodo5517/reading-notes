@@ -173,6 +173,13 @@ public class ReadingRecordService {
             nextCursor = buildCursor(last.getRecordedAt(), last.getId());
         }
 
+        // 기간 계산
+        LocalDateTime minAt = readingRecordRepository.findMinRecordedAtByUserAndBook(userId, bookId);
+        LocalDateTime maxAt = readingRecordRepository.findMaxRecordedAtByUserAndBook(userId, bookId);
+
+        String periodStart = (minAt == null) ? null : minAt.toString();
+        String periodEnd   = (maxAt == null) ? null : maxAt.toString();
+
         // 책 정보 구성
         BookMetaResponse bookMeta = new BookMetaResponse(
                 book.getId(),
@@ -180,7 +187,9 @@ public class ReadingRecordService {
                 book.getAuthor(),
                 book.getPublisher(),
                 book.getPublishedDate() != null ? book.getPublishedDate().toString() : null,
-                book.getCoverUrl()
+                book.getCoverUrl(),
+                periodStart,
+                periodEnd
         );
 
         // 기록 정보 매핑

@@ -38,6 +38,21 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
             Long cursorId,
             Pageable pageable
     );
+    // 기간 계산(해당 유저의 해당 책 기록 중 가장 과거/가장 최근)
+    @Query("""
+        select min(r.recordedAt)
+          from ReadingRecord r
+         where r.user.id = :userId
+           and r.book.id = :bookId
+    """)
+    LocalDateTime findMinRecordedAtByUserAndBook(Long userId, Long bookId);
+    @Query("""
+        select max(r.recordedAt)
+          from ReadingRecord r
+         where r.user.id = :userId
+           and r.book.id = :bookId
+    """)
+    LocalDateTime findMaxRecordedAtByUserAndBook(Long userId, Long bookId);
 
     // 해당 유저의 기록 중 최신 N개만 가져옴,  count 쿼리 없음.
     // 페이지네이션 필요 없으니 굳이 Page 안 쓰고 List로 반환
