@@ -20,6 +20,31 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     @EntityGraph(attributePaths = "book")
     Page<ReadingRecord> findByUser_IdOrderByRecordedAtDesc(Long userId, Pageable pageable);
 
+    @Query(
+            value = """
+            select rr
+            from ReadingRecord rr
+            left join fetch rr.book b
+            where rr.user.id = :userId
+              and (
+                    :q is null
+                 or lower(rr.sentence) like lower(concat('%', :q, '%'))
+                 or lower(rr.comment)  like lower(concat('%', :q, '%'))
+              )
+            """,
+            countQuery = """
+            select count(rr)
+            from ReadingRecord rr
+            where rr.user.id = :userId
+              and (
+                    :q is null
+                 or lower(rr.sentence) like lower(concat('%', :q, '%'))
+                 or lower(rr.comment)  like lower(concat('%', :q, '%'))
+              )
+            """
+    )
+    Page<ReadingRecord> findMyRecordsByQ(@Param("userId") Long userId, @Param("q") String q, Pageable pageable);
+
     // 해당 유저의 특정 책 찾기
     @Query("""
         select r
@@ -97,6 +122,6 @@ group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
 order by b.title asc
 """)
     Page<BookWithLastRecordResponse> findConfirmedBooksByTitle(Long userId, String q, Pageable pageable);
+
+    // 해당 유저의 기록 중
 }
-
-

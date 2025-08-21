@@ -130,8 +130,10 @@ public class ReadingRecordService {
     }
 
     // 해당 유저의 모든 기록 불러오기
-    public Page<ReadingRecord> getMyRecords(Long userId, Pageable pageable) {
-        return readingRecordRepository.findByUser_IdOrderByRecordedAtDesc(userId, pageable);
+    public Page<ReadingRecord> getMyRecords(Long userId, String q, Pageable pageable) {
+        // q가 비어있으면 null로 전달 → 쿼리에서 전체 조회 + 최신순 정렬(Pageable)
+        String normalizedQ = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
+        return readingRecordRepository.findMyRecordsByQ(userId, normalizedQ, pageable);
     }
 
     // 해당 유저의 매칭 끝난 책 리스트 불러오기
