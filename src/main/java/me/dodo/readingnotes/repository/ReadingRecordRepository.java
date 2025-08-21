@@ -27,7 +27,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
             left join fetch rr.book b
             where rr.user.id = :userId
               and (
-                    :q is null
+                    :q is null or :q = ''
                  or lower(rr.sentence) like lower(concat('%', :q, '%'))
                  or lower(rr.comment)  like lower(concat('%', :q, '%'))
               )
@@ -37,7 +37,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
             from ReadingRecord rr
             where rr.user.id = :userId
               and (
-                    :q is null
+                    :q is null or :q = ''
                  or lower(rr.sentence) like lower(concat('%', :q, '%'))
                  or lower(rr.comment)  like lower(concat('%', :q, '%'))
               )
@@ -57,10 +57,10 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
          order by r.recordedAt desc, r.id desc
     """)
     List<ReadingRecord> findSliceByUserAndBookWithCursor(
-            Long userId,
-            Long bookId,
-            LocalDateTime cursorAt,
-            Long cursorId,
+            @Param("userId") Long userId,
+            @Param("bookId") Long bookId,
+            @Param("cursorAt") LocalDateTime cursorAt,
+            @Param("cursorId") Long cursorId,
             Pageable pageable
     );
     // 기간 계산(해당 유저의 해당 책 기록 중 가장 과거/가장 최근)
@@ -99,7 +99,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
         where r.user.id = :userId
           and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
                                 me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
-          and (:q is null
+          and (:q is null or :q = ''
                or lower(b.title) like lower(concat('%', :q, '%'))
                or lower(b.author) like lower(concat('%', :q, '%')))
         group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
@@ -115,7 +115,7 @@ from ReadingRecord r join r.book b
 where r.user.id = :userId
   and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
                         me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
-  and (:q is null
+  and (:q is null or :q = ''
        or lower(b.title) like lower(concat('%', :q, '%'))
        or lower(b.author) like lower(concat('%', :q, '%')))
 group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
@@ -123,5 +123,18 @@ order by b.title asc
 """)
     Page<BookWithLastRecordResponse> findConfirmedBooksByTitle(Long userId, String q, Pageable pageable);
 
-    // 해당 유저의 기록 중
+    // Day 목록 (집계)
+    @Query("""
+        select cast(r.recordedAt as date) as day, count(r) as cnt
+        from ReadingRecord r
+        where r.user.id = :userId
+          and r.recordedAt >= :start and r.recordedAt < :end
+        group by cast(r.recordedAt as date)
+        order by cast(r.recordedAt as date) asc
+        """)
+    List<DayCountRow> countByDayInRange(@Param("userId") Long userId,
+                                        @Param("start") LocalDateTime start,
+                                        @Param("end") LocalDateTime end);
+
+
 }

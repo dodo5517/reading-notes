@@ -5,17 +5,21 @@ import me.dodo.readingnotes.config.ApiKeyFilter;
 import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.dto.book.BookRecordsPageResponse;
 import me.dodo.readingnotes.dto.book.BookWithLastRecordResponse;
+import me.dodo.readingnotes.dto.calendar.CalendarResponse;
 import me.dodo.readingnotes.dto.reading.ReadingRecordRequest;
 import me.dodo.readingnotes.dto.reading.ReadingRecordResponse;
+import me.dodo.readingnotes.service.ReadingCalendarService;
 import me.dodo.readingnotes.service.ReadingRecordService;
 import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
+import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -26,10 +30,13 @@ public class ReadingRecordController {
 
     private final ReadingRecordService service;
     private final JwtTokenProvider jwtTokenProvider;
+    private final ReadingCalendarService calendarService;
 
-    public ReadingRecordController(ReadingRecordService service, JwtTokenProvider jwtTokenProvider){
+    public ReadingRecordController(ReadingRecordService service, JwtTokenProvider jwtTokenProvider,
+                                   ReadingCalendarService calendarService) {
         this.service = service;
         this.jwtTokenProvider = jwtTokenProvider;
+        this.calendarService = calendarService;
     }
 
     // 아이폰 단축어로 메모 추가
@@ -106,5 +113,16 @@ public class ReadingRecordController {
         Long userId = jwtTokenProvider.getUserIdFromToken(token);
 
         return service.getBookRecordsByCursor(userId, bookId, cursor, size);
+    }
+
+    // 한 달 동안 기록한 날짜 불러오기
+    @GetMapping("/calendar")
+    public CalendarResponse getCalendar(@RequestParam int year,
+                                        @RequestParam int month,
+                                        HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        return calendarService.getMonthly(userId, year, month);
     }
 }
