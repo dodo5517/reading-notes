@@ -20,6 +20,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     @EntityGraph(attributePaths = "book")
     Page<ReadingRecord> findByUser_IdOrderByRecordedAtDesc(Long userId, Pageable pageable);
 
+    // 해당 유저의 모든 기록 불러오기
     @Query(
             value = """
             select rr
@@ -123,7 +124,7 @@ order by b.title asc
 """)
     Page<BookWithLastRecordResponse> findConfirmedBooksByTitle(Long userId, String q, Pageable pageable);
 
-    // Day 목록 (집계)
+    // Day 목록
     @Query("""
         select cast(r.recordedAt as date) as day, count(r) as cnt
         from ReadingRecord r
@@ -136,5 +137,24 @@ order by b.title asc
                                         @Param("start") LocalDateTime start,
                                         @Param("end") LocalDateTime end);
 
+    // 하루 기록 보기/월 전체 기록 보기
+    @Query("""
+      select rr
+      from ReadingRecord rr
+      join fetch rr.book b
+      where rr.user.id = :userId
+        and rr.recordedAt >= :start
+        and rr.recordedAt <  :end
+        and (
+              :q is null or :q = ''
+           or lower(rr.sentence) like lower(concat('%', :q, '%'))
+           or lower(rr.comment)  like lower(concat('%', :q, '%'))
+        )
+      """)
+    Page<ReadingRecord> findRecordsInRange(@Param("userId") Long userId,
+                                           @Param("start") LocalDateTime start,
+                                           @Param("end") LocalDateTime end,
+                                           @Param("q") String q,
+                                           Pageable pageable);
 
 }

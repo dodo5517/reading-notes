@@ -1,10 +1,13 @@
 package me.dodo.readingnotes.service;
 
+import me.dodo.readingnotes.domain.ReadingRecord;
 import me.dodo.readingnotes.dto.calendar.CalendarResponse;
 import me.dodo.readingnotes.dto.calendar.CalendarSummary;
 import me.dodo.readingnotes.dto.calendar.DayStat;
 import me.dodo.readingnotes.repository.DayCountRow;
 import me.dodo.readingnotes.repository.ReadingRecordRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -49,5 +52,19 @@ public class ReadingCalendarService {
 
         CalendarSummary summary = new CalendarSummary(totalDaysWithRecord, totalRecords, first, last);
         return new CalendarResponse(startDate, endDate, days, summary);
+    }
+
+    // 하루 기록 보기
+    public Page<ReadingRecord> findByDay(Long userId, LocalDate day, String q, Pageable pageable) {
+        LocalDateTime start = day.atStartOfDay();
+        LocalDateTime end   = day.plusDays(1).atStartOfDay();
+        return repo.findRecordsInRange(userId, start, end, q, pageable);
+    }
+    // 월 전체 기록 보기
+    public Page<ReadingRecord> findByMonth(Long userId, int year, int month, String q, Pageable pageable) {
+        YearMonth ym = YearMonth.of(year, month);
+        LocalDateTime start = ym.atDay(1).atStartOfDay();
+        LocalDateTime end   = ym.plusMonths(1).atDay(1).atStartOfDay();
+        return repo.findRecordsInRange(userId, start, end, q, pageable);
     }
 }
