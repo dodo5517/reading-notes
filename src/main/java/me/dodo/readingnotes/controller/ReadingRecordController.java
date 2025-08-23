@@ -55,7 +55,7 @@ public class ReadingRecordController {
     @GetMapping("/me/summary")
     public  List<ReadingRecordResponse> getMyLatestRecords(
             HttpServletRequest request,
-            @RequestParam(name = "size", defaultValue = "3") int size
+            @RequestParam(value = "size", defaultValue = "3") int size
     ){
         log.info("getMySummaryRecords");
 
@@ -117,8 +117,8 @@ public class ReadingRecordController {
 
     // 한 달 동안 기록한 날짜 불러오기
     @GetMapping("/calendar")
-    public CalendarResponse getCalendar(@RequestParam int year,
-                                        @RequestParam int month,
+    public CalendarResponse getCalendar(@RequestParam(value = "year") int year,
+                                        @RequestParam(value = "month") int month,
                                         HttpServletRequest request) {
         String accessToken = jwtTokenProvider.extractToken(request);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
@@ -128,12 +128,12 @@ public class ReadingRecordController {
 
     // 월 기록 목록 조회
     @GetMapping("/month")
-    public Page<ReadingRecordResponse> getMyMonth(@RequestParam int year,
-                                                  @RequestParam int month,
-                                                  @RequestParam(required = false) String q,
-                                                  @RequestParam(defaultValue = "0") int page,
-                                                  @RequestParam(defaultValue = "10") int size, // 기본 10개
-                                                  @RequestParam(defaultValue = "desc") String sort, // 기본 내림차순
+    public Page<ReadingRecordResponse> getMyMonth(@RequestParam(value = "year") int year,
+                                                  @RequestParam(value = "month") int month,
+                                                  @RequestParam(value = "q", required = false) String q,
+                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                  @RequestParam(value = "size", defaultValue = "10") int size, // 기본 10개
+                                                  @RequestParam(value = "sort", defaultValue = "desc") String sort, // 기본 내림차순
                                                   HttpServletRequest request) {
         String accessToken = jwtTokenProvider.extractToken(request);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
@@ -145,6 +145,26 @@ public class ReadingRecordController {
 
         Pageable pageable = PageRequest.of(page, size, order);
         Page<ReadingRecord> pageAndRecords = calendarService.findByMonth(userId, year, month, q, pageable);
+        return pageAndRecords.map(ReadingRecordResponse::new);
+    }
+    // 하루 기록 목록 조회
+    @GetMapping("/day")
+    public Page<ReadingRecordResponse> getMyDay(@RequestParam(value = "date") String date,
+                                                  @RequestParam(value = "q", required = false) String q,
+                                                  @RequestParam(value = "page", defaultValue = "0") int page,
+                                                  @RequestParam(value = "size", defaultValue = "10") int size, // 기본 10개
+                                                  @RequestParam(value = "sort", defaultValue = "desc") String sort, // 기본 내림차순
+                                                  HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        // 날짜 오름/내림으로만 정렬 가능함.
+        Sort order = "asc".equalsIgnoreCase(sort)
+                ? Sort.by("recordedAt").ascending()
+                : Sort.by("recordedAt").descending();
+
+        Pageable pageable = PageRequest.of(page, size, order);
+        Page<ReadingRecord> pageAndRecords = calendarService.findByDay(userId, LocalDate.parse(date), q, pageable);
         return pageAndRecords.map(ReadingRecordResponse::new);
     }
 }
