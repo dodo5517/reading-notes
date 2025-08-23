@@ -25,6 +25,7 @@ public class ReadingCalendarService {
         this.repo = repo;
     }
 
+    // 한 달 동안 기록한 날짜 조회
     public CalendarResponse getMonthly(Long userId, int year, int month) {
         YearMonth ym = YearMonth.of(year, month);
 

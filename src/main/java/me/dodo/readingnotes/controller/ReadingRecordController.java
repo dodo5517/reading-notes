@@ -125,4 +125,26 @@ public class ReadingRecordController {
 
         return calendarService.getMonthly(userId, year, month);
     }
+
+    // 월 기록 목록 조회
+    @GetMapping("/month")
+    public Page<ReadingRecordResponse> getMyMonth(@RequestParam int year,
+                                                  @RequestParam int month,
+                                                  @RequestParam(required = false) String q,
+                                                  @RequestParam(defaultValue = "0") int page,
+                                                  @RequestParam(defaultValue = "10") int size, // 기본 10개
+                                                  @RequestParam(defaultValue = "desc") String sort, // 기본 내림차순
+                                                  HttpServletRequest request) {
+        String accessToken = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        // 날짜 오름/내림으로만 정렬 가능함.
+        Sort order = "asc".equalsIgnoreCase(sort)
+                ? Sort.by("recordedAt").ascending()
+                : Sort.by("recordedAt").descending();
+
+        Pageable pageable = PageRequest.of(page, size, order);
+        Page<ReadingRecord> pageAndRecords = calendarService.findByMonth(userId, year, month, q, pageable);
+        return pageAndRecords.map(ReadingRecordResponse::new);
+    }
 }
