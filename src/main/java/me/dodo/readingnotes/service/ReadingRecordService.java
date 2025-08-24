@@ -252,6 +252,13 @@ public class ReadingRecordService {
         ReadingRecord record = recordOpt.get();
         log.debug("requet record: {}", request.toString());
 
+        // null을 제외한 빈 문자열("")은 덮어쓰기함.
+        Optional.ofNullable(request.getRawTitle()).ifPresent(record::setRawTitle);
+        Optional.ofNullable(request.getRawAuthor()).ifPresent(record::setRawAuthor);
+        Optional.ofNullable(request.getSentence()).ifPresent(record::setSentence);
+        Optional.ofNullable(request.getComment()).ifPresent(record::setComment);
+        record.setUpdatedAt(LocalDateTime.now());
+
         // 책 정보 변경 시
         if (request.getRawTitle() != null || request.getRawAuthor() != null) {
             // 기존 책 연결 끊기
@@ -262,13 +269,7 @@ public class ReadingRecordService {
                 matchingBook(record);
             }
         }
-        // null을 제외한 빈 문자열("")은 덮어쓰기함.
-        Optional.ofNullable(request.getRawTitle()).ifPresent(record::setRawTitle);
-        Optional.ofNullable(request.getRawAuthor()).ifPresent(record::setRawAuthor);
-        Optional.ofNullable(request.getSentence()).ifPresent(record::setSentence);
-        Optional.ofNullable(request.getComment()).ifPresent(record::setComment);
-        record.setUpdatedAt(LocalDateTime.now());
-
+        log.debug("saved record: {}", request.toString());
         // 수정한 기록 저장
         ReadingRecord saved = readingRecordRepository.save(record);
 

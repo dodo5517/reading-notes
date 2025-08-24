@@ -142,7 +142,6 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     @Query("""
       select rr
       from ReadingRecord rr
-      join fetch rr.book b
       where rr.user.id = :userId
         and rr.recordedAt >= :start
         and rr.recordedAt <  :end
