@@ -49,6 +49,41 @@ public class ReadingRecordResponse {
         }
     }
 
+    // fromEntity를 위한 DTO 생성자
+    public ReadingRecordResponse(Long id,
+                                 String title,
+                                 String author,
+                                 String sentence,
+                                 String comment,
+                                 Boolean matched,
+                                 Long bookId,
+                                 String coverUrl,
+                                 LocalDateTime recordedAt) {
+        this.id = id;
+        this.title = title;
+        this.author = author;
+        this.sentence = sentence;
+        this.comment = comment;
+        this.matched = matched;
+        this.bookId = bookId;
+        this.coverUrl = coverUrl;
+        this.recordedAt = recordedAt;
+    }
+
+    public static ReadingRecordResponse fromEntity(ReadingRecord record) {
+        return new ReadingRecordResponse(
+                record.getId(),
+                record.getBook() != null ? record.getBook().getTitle() : record.getRawTitle(),
+                record.getBook() != null ? record.getBook().getAuthor() : record.getRawAuthor(),
+                record.getSentence(),
+                record.getComment(),
+                record.getBook() != null, // 매칭 여부
+                record.getBook() != null ? record.getBook().getId() : null,
+                record.getBook() != null ? record.getBook().getCoverUrl() : null,
+                record.getRecordedAt()
+        );
+    }
+
     public Long getId() { return id; }
     public String getTitle() { return title; }
     public String getAuthor() { return author; }

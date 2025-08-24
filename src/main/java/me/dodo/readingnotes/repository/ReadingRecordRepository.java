@@ -10,6 +10,7 @@ import org.springframework.data.repository.query.Param;
 
 import java.time.LocalDateTime;
 import java.util.List;
+import java.util.Optional;
 
 public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Long> {
     // 필요하면 여기에 커스텀 쿼리도 작성
@@ -18,7 +19,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     // Page라서 전체 개수(totalElements), 전체 페이지 수(totalPages), 현재 페이지 번호(pageNumber) 포함함.
     // N+1 줄이기 위해서 book을 EntityGraph로 로딩함.
     @EntityGraph(attributePaths = "book")
-    Page<ReadingRecord> findByUser_IdOrderByRecordedAtDesc(Long userId, Pageable pageable);
+    Optional<ReadingRecord> findByIdAndUserId(Long recordId, Long userId);
 
     // 해당 유저의 모든 기록 불러오기
     @Query(
@@ -109,19 +110,19 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     Page<BookWithLastRecordResponse> findConfirmedBooksByRecent(Long userId, String q, Pageable pageable);
     // 제목순
     @Query("""
-select new me.dodo.readingnotes.dto.book.BookWithLastRecordResponse(
-    b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
-)
-from ReadingRecord r join r.book b
-where r.user.id = :userId
-  and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
-                        me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
-  and (:q is null or :q = ''
-       or lower(b.title) like lower(concat('%', :q, '%'))
-       or lower(b.author) like lower(concat('%', :q, '%')))
-group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
-order by b.title asc
-""")
+        select new me.dodo.readingnotes.dto.book.BookWithLastRecordResponse(
+            b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl, max(r.recordedAt)
+        )
+        from ReadingRecord r join r.book b
+        where r.user.id = :userId
+          and r.matchStatus in (me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_AUTO,
+                                me.dodo.readingnotes.domain.ReadingRecord.MatchStatus.RESOLVED_MANUAL)
+          and (:q is null or :q = ''
+               or lower(b.title) like lower(concat('%', :q, '%'))
+               or lower(b.author) like lower(concat('%', :q, '%')))
+        group by b.id, b.title, b.author, b.isbn10, b.isbn13, b.coverUrl
+        order by b.title asc
+        """)
     Page<BookWithLastRecordResponse> findConfirmedBooksByTitle(Long userId, String q, Pageable pageable);
 
     // Day 목록

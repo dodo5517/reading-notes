@@ -51,7 +51,7 @@ public class ReadingRecordController {
         return ResponseEntity.ok(saved.getId());
     }
 
-    // 해당 유저의 최근 N(default=3)개 기록 보기(메인 화면용)
+    // 해당 유저의 최근 N(default=3)개 기록 조회(메인 화면용)
     @GetMapping("/me/summary")
     public  List<ReadingRecordResponse> getMyLatestRecords(
             HttpServletRequest request,
@@ -69,7 +69,7 @@ public class ReadingRecordController {
         return list.stream().map(ReadingRecordResponse::new).collect(Collectors.toList());
     }
 
-    // 해당 유저의 모든 기록 보기
+    // 해당 유저의 모든 기록 조회
     @GetMapping("/me")
     // Page로 반환하므로 관련된 메타데이터도 따로 전달됨.
     public Page<ReadingRecordResponse> getMyRecords(
@@ -84,7 +84,7 @@ public class ReadingRecordController {
         return page.map(ReadingRecordResponse::new);
     }
 
-    // 해당 유저가 읽은 책 중 매핑이 끝난 N(default=20)개 책들 보기
+    // 해당 유저가 읽은 책 중 매핑이 끝난 N(default=20)개 책들 조회
     @GetMapping("/me/books")
     public Page<BookWithLastRecordResponse> getMyConfirmedBooks(
             HttpServletRequest request,
@@ -101,7 +101,7 @@ public class ReadingRecordController {
         return service.getConfirmedBooks(userId, q, pageable, sort);
     }
 
-    // 해당 유저가 기록한 책 한 권에 대한 모든 기록 불러오기
+    // 해당 유저가 기록한 책 한 권에 대한 모든 기록 조회
     @GetMapping("/books/{bookId}")
     public BookRecordsPageResponse getBookRecords(
             @PathVariable Long bookId,
@@ -115,7 +115,7 @@ public class ReadingRecordController {
         return service.getBookRecordsByCursor(userId, bookId, cursor, size);
     }
 
-    // 한 달 동안 기록한 날짜 불러오기
+    // 한 달 동안 기록한 날짜 조회
     @GetMapping("/calendar")
     public CalendarResponse getCalendar(@RequestParam(value = "year") int year,
                                         @RequestParam(value = "month") int month,
@@ -166,5 +166,17 @@ public class ReadingRecordController {
         Pageable pageable = PageRequest.of(page, size, order);
         Page<ReadingRecord> pageAndRecords = calendarService.findByDay(userId, LocalDate.parse(date), q, pageable);
         return pageAndRecords.map(ReadingRecordResponse::new);
+    }
+
+    // 기록 수정
+    @PostMapping("/update/{recordId}")
+    public ReadingRecordResponse updateRecord(
+            @PathVariable Long recordId,
+            @RequestBody ReadingRecordRequest req,
+            HttpServletRequest request){
+        String accessToken = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        return service.update(recordId, userId, req);
     }
 }
