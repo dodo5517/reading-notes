@@ -278,14 +278,12 @@ public class ReadingRecordService {
     }
 
     // 기록 삭제
-    public String deleteRecordById(long id) {
+    public void deleteRecordById(Long recordId, Long userId) {
         // 삭제하려는 행의 존재 여부 확인
-        ReadingRecord record = readingRecordRepository.findById(id)
-                .orElseThrow(()-> new IllegalArgumentException("해당 ID의 기록이 없습니다."));
+        ReadingRecord record = readingRecordRepository.findByIdAndUserId(recordId, userId)
+                .orElseThrow(()-> new IllegalArgumentException("해당 유저의 해당 레코드가 존재하지 않습니다: "+ userId +"의"+ recordId));
         // 삭제
         readingRecordRepository.delete(record);
-        // 삭제 완료 메시지
-        return "삭제가 완료되었습니다.";
     }
 
 }

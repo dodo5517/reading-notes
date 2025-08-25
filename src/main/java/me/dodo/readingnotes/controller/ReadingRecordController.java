@@ -14,7 +14,6 @@ import me.dodo.readingnotes.util.JwtTokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.data.domain.*;
-import org.springframework.data.repository.query.Param;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -178,5 +177,16 @@ public class ReadingRecordController {
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         return service.update(recordId, userId, req);
+    }
+
+    // 기록 삭제
+    @DeleteMapping("/delete/{recordId}")
+    public void deleteRecord(
+            @PathVariable Long recordId,
+            HttpServletRequest request){
+        String accessToken = jwtTokenProvider.extractToken(request);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        service.deleteRecordById(recordId, userId);
     }
 }
