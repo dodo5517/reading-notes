@@ -53,44 +53,83 @@ public class KakaoBookClient implements BookSearchClient {
         log.debug("Kakao API response: {}", resp.documents.toString());
 
         // BookCandidate로 변환
-        return resp.documents.stream().map(this::toCandidate).collect(Collectors.toList());
+        return resp.documents.stream()
+                .map(this::toCandidateSafe)   
+                .filter(Objects::nonNull)     // ← 변환 실패/스킵된 문서 제거
+                .limit(size)                  // 혹시 초과시 안전
+                .collect(Collectors.toList());
     }
 
-    private BookCandidate toCandidate(Document d) {
+    private BookCandidate toCandidateSafe(Document d) {
+        if (d == null) return null;
+
+        String title = trimToNull(d.title);
+        if (title == null) {
+            log.debug("skip kakao doc: title is null/blank. raw={}", d);
+            return null; // 제목 없으면 후보 제외
+        }
+
         BookCandidate c = new BookCandidate();
         c.setSource(getSource());
-        c.setTitle(d.title);
-        c.setAuthor(joinAuthor(d.authors));
-        // externalId: 카카오는 별도 ID가 없어서 url 또는 isbn13 활용
-        c.setExternalId(d.url != null ? d.url : d.isbn);
+        c.setTitle(title);
 
-        // 길이에 따라 ISBN10/ISBN13을 분리 저장
-        if (d.isbn != null && !d.isbn.isBlank()) {
-            String[] parts = d.isbn.trim().split("\\s+");
-            if (parts.length == 2) {
-                if (parts[0].length() == 10) c.setIsbn10(parts[0]);
-                if (parts[1].length() == 13) c.setIsbn13(parts[1]);
-            } else if (parts.length == 1) {
-                if (parts[0].length() == 13) c.setIsbn13(parts[0]);
-                else if (parts[0].length() == 10) c.setIsbn10(parts[0]);
-            }
-        }
-        c.setPublisher(d.publisher);
-        // datetime은 날짜만 잘라 LocalDate로 파싱함
+        // authors → "A, B" (null 안전)
+        String author = joinAuthor(d.authors);
+        if (author != null && author.isBlank()) author = null;
+        c.setAuthor(author);
+
+        // externalId: url 우선, 없으면 isbn 원문
+        // externalId: 카카오는 별도 ID가 없어서 url 또는 isbn13 활용
+        c.setExternalId(defaultStr(d.url) != null ? d.url : trimToNull(d.isbn));
+
+        // ISBN 정제: 숫자/‘X’만 남기고 10/13 자리만 선별
+        IsbnPair pair = parseIsbnPair(d.isbn);
+        c.setIsbn10(defaultStr(pair.isbn10));
+        c.setIsbn13(defaultStr(pair.isbn13));
+
+        c.setPublisher(defaultStr(d.publisher));
         c.setPublishedDate(parseDate(d.datetime));
-        c.setThumbnailUrl(d.thumbnail);
+        c.setThumbnailUrl(defaultStr(d.thumbnail));
         c.setScore(0.0);
 
-        log.debug("kakaoBook BookCandidate: {}", c.toString());
+        log.debug("kakaoBook BookCandidate: {}", c);
         return c;
+    }
+    private static class IsbnPair {
+        final String isbn10;
+        final String isbn13;
+        IsbnPair(String i10, String i13) { this.isbn10 = i10; this.isbn13 = i13; }
+    }
+    // isbn 정제
+    private IsbnPair parseIsbnPair(String raw) {
+        if (raw == null) return new IsbnPair(null, null);
+        // 공백/쉼표로 토큰화 후 숫자/대문자X만 남김 (하이픈/문자 제거, 소문자x → X)
+        String[] tokens = raw.trim().split("\\s+|,");
+        String i10 = null, i13 = null;
+        for (String tk : tokens) {
+            if (tk == null) continue;
+            String cleaned = tk.replaceAll("[^0-9Xx]", "").toUpperCase();
+            if (cleaned.length() == 10 && i10 == null) i10 = cleaned;
+            else if (cleaned.length() == 13 && i13 == null) i13 = cleaned;
+        }
+        return new IsbnPair(i10, i13);
+    }
+    private static String defaultStr(String s) { return s == null ? "" : s; }
+    private static String trimToNull(String s) {
+        if (s == null) return null;
+        String t = s.trim();
+        return t.isEmpty() ? null : t;
     }
 
     // author 리스트를 "A, B"로 합치기 (null/빈 처리 포함)
     private static String joinAuthor(List<String> author) {
         if (author == null || author.isEmpty()) return "";
-        return author.stream()
-                .filter(a -> a != null && !a.trim().isEmpty())
+        String joined = author.stream()
+                .filter(Objects::nonNull)
+                .map(String::trim)
+                .filter(s -> !s.isEmpty())
                 .collect(Collectors.joining(", "));
+        return joined.isEmpty() ? null : joined;
     }
 
     // 날짜 파싱("2020-01-02T10:20:30.000+09:00" 같은 문자열을 LocalDate(앞 10자리)로 파싱함.)
