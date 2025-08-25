@@ -103,7 +103,7 @@ public class ReadingRecordController {
     // 해당 유저가 기록한 책 한 권에 대한 모든 기록 조회
     @GetMapping("/books/{bookId}")
     public BookRecordsPageResponse getBookRecords(
-            @PathVariable Long bookId,
+            @PathVariable("bookId") Long bookId,
             @RequestParam(required = false) String cursor,
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request
@@ -170,7 +170,7 @@ public class ReadingRecordController {
     // 기록 수정
     @PostMapping("/update/{recordId}")
     public ReadingRecordResponse updateRecord(
-            @PathVariable Long recordId,
+            @PathVariable("recordId") Long recordId,
             @RequestBody ReadingRecordRequest req,
             HttpServletRequest request){
         String accessToken = jwtTokenProvider.extractToken(request);
