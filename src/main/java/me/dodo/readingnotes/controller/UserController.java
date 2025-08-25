@@ -56,8 +56,9 @@ public class UserController {
     // 로그인한 유저의 정보 조회
     @GetMapping("/me")
     public UserResponse getMe(HttpServletRequest request){
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
         User user = userService.findUserById(userId);
         return new UserResponse(user);
     }
@@ -95,8 +96,9 @@ public class UserController {
         log.debug("수정할 이름: {}", request.getNewUsername());
 
         // 토큰에서 userId 추출
-        String token = jwtTokenProvider.extractToken(httpRequest);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(httpRequest);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         // 유저 이름 수정
         Boolean result = userService.updateUsername(userId, request.getNewUsername());
@@ -115,8 +117,9 @@ public class UserController {
         log.debug("비밀번호 수정 요청");
         
         // 토큰에서 userId 추출
-        String token = jwtTokenProvider.extractToken(httpRequest);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(httpRequest);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         // 유저 비밀번호 수정
         Boolean result = userService.updatePassword(userId, request.getCurrentPassword(), request.getNewPassword());
@@ -140,8 +143,9 @@ public class UserController {
     public ResponseEntity<MaskedApiKeyResponse> reissueApiKey(HttpServletRequest request) {
         log.debug("API Key 재발급 요청");
 
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         String maskedApiKey = userService.reissueApiKey(userId);
         return ResponseEntity.ok(new MaskedApiKeyResponse("API Key가 새로 발급되었습니다.", maskedApiKey));
@@ -151,9 +155,10 @@ public class UserController {
     @GetMapping("/api-key")
     public ResponseEntity<ApiKeyResponse> getApiKey(HttpServletRequest request) {
         log.debug("API Key 전체 조회 요청");
-        
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         String apiKey = userService.getRawApiKey(userId);
         return ResponseEntity.ok(new ApiKeyResponse("API Key 조회 성공", apiKey));

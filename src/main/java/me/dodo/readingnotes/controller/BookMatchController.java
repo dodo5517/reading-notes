@@ -19,9 +19,9 @@ public class BookMatchController {
     
     // 후보를 조회함
     @GetMapping("/candidates")
-    public List<BookCandidate> candidates(@RequestParam String rawTitle,
-                                          @RequestParam(required = false) String rawAuthor,
-                                          @RequestParam(defaultValue = "10") int limit) {
+    public List<BookCandidate> candidates(@RequestParam("rawTitle") String rawTitle,
+                                          @RequestParam(value = "rawAuthor", required = false) String rawAuthor,
+                                          @RequestParam(value = "limit", defaultValue = "10") int limit) {
         return candidateService.findCandidates(rawTitle, rawAuthor, limit);
     }
 }

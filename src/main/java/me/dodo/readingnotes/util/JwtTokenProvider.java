@@ -82,6 +82,10 @@ public class JwtTokenProvider {
         }
         return false;
     }
+    public void assertValid(String token) {
+        // 예외를 삼키지 말고 그대로 던진다 (ExpiredJwtException 등)
+        Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(token);
+    }
 
     // Authorization 헤더에서 꺼내기
     public static String extractToken(HttpServletRequest request) {
@@ -92,7 +96,7 @@ public class JwtTokenProvider {
         throw new IllegalArgumentException("유효하지 않은 Authorization header 입니다.");
     }
 
-    // 토큰 만료 시간 확인
+    // 토큰 만료 시간(Date) 확인
     public Date getExpirationDate(String token){
         return Jwts.parserBuilder()
                 .setSigningKey(key)
@@ -100,5 +104,13 @@ public class JwtTokenProvider {
                 .parseClaimsJws(token)
                 .getBody()
                 .getExpiration();
+    }
+
+    // 토큰 만료 남은 시간 확인
+    public long getRemainingSeconds(String token) {
+        Date exp = getExpirationDate(token);
+        long now = System.currentTimeMillis();
+        long remain = exp.getTime() - now;
+        return Math.max(0, remain / 1000); // 초 단위
     }
 }

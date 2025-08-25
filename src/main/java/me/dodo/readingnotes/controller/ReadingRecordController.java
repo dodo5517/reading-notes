@@ -59,9 +59,11 @@ public class ReadingRecordController {
         log.info("getMySummaryRecords");
 
         // 헤더에서 Authorization 추출
-        String token = jwtTokenProvider.extractToken(request);
+        String AccessToken = jwtTokenProvider.extractToken(request);
+        // access 토큰 유효한지 확인.
+        jwtTokenProvider.assertValid(AccessToken);
         // 토큰에서 userId 추출
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        Long userId = jwtTokenProvider.getUserIdFromToken(AccessToken);
 
         List<ReadingRecord> list = service.getLatestRecords(userId, size);
         log.debug("list: {}", list.toString());
@@ -76,8 +78,9 @@ public class ReadingRecordController {
             @PageableDefault(size = 10, sort = "recordedAt", direction = Sort.Direction.DESC) Pageable pageable,
             @RequestParam(value = "q", required = false) String q
     ) {
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         Page<ReadingRecord> page = service.getMyRecords(userId, q, pageable);
         return page.map(ReadingRecordResponse::new);
@@ -92,8 +95,9 @@ public class ReadingRecordController {
             @RequestParam(value = "size", defaultValue = "10") int size,
             @RequestParam(value = "sort", defaultValue = "recent") String sort
     ) {
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         Pageable pageable = PageRequest.of(page, size);
 
@@ -108,8 +112,9 @@ public class ReadingRecordController {
             @RequestParam(defaultValue = "20") int size,
             HttpServletRequest request
     ) {
-        String token = jwtTokenProvider.extractToken(request);
-        Long userId = jwtTokenProvider.getUserIdFromToken(token);
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         return service.getBookRecordsByCursor(userId, bookId, cursor, size);
     }
@@ -120,6 +125,7 @@ public class ReadingRecordController {
                                         @RequestParam(value = "month") int month,
                                         HttpServletRequest request) {
         String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         return calendarService.getMonthly(userId, year, month);
@@ -135,6 +141,7 @@ public class ReadingRecordController {
                                                   @RequestParam(value = "sort", defaultValue = "desc") String sort, // 기본 내림차순
                                                   HttpServletRequest request) {
         String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         // 날짜 오름/내림으로만 정렬 가능함.
@@ -155,6 +162,7 @@ public class ReadingRecordController {
                                                   @RequestParam(value = "sort", defaultValue = "desc") String sort, // 기본 내림차순
                                                   HttpServletRequest request) {
         String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         // 날짜 오름/내림으로만 정렬 가능함.
@@ -174,6 +182,7 @@ public class ReadingRecordController {
             @RequestBody ReadingRecordRequest req,
             HttpServletRequest request){
         String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         return service.update(recordId, userId, req);
@@ -185,6 +194,7 @@ public class ReadingRecordController {
             @PathVariable Long recordId,
             HttpServletRequest request){
         String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
         service.deleteRecordById(recordId, userId);

@@ -48,13 +48,14 @@ public class AuthController {
 
         // refreshToken -> HttpOnly 쿠키에 저장
         ResponseCookie refreshCookie = CookieUtil.createRefreshTokenCookie(result.getRefreshToken(), false);
-
         // 헤더에 저장
         httpResponse.addHeader("Set-Cookie", refreshCookie.toString());
 
+
         // accessToken -> JSON 응답 body에 포함
         // refreshToken은 쿠키로 보냈으므로 응답 body에는 null로 처리
-        return new AuthResponse("로그인 성공", new UserResponse(result.getUser()), result.getAccessToken(), null);
+        return new AuthResponse("로그인 성공", new UserResponse(result.getUser()), result.getAccessToken(),
+                null, result.getExpiresIn(), result.getServerTime());
     }
 
     // 현재 기기에서 로그아웃
@@ -120,6 +121,7 @@ public class AuthController {
 
         AuthResult result = authService.reissueAccessToken(refreshToken, userAgent);
 
-        return new AuthResponse("토큰 재발급 성공", new UserResponse(result.getUser()), result.getAccessToken(), null);
+        return new AuthResponse("토큰 재발급 성공", new UserResponse(result.getUser()), result.getAccessToken(),
+                null, result.getExpiresIn(), result.getServerTime());
     }
 }

@@ -92,7 +92,12 @@ public class AuthService {
         // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
         log.debug("refreshToken: {}", tokenEntity.getToken().substring(0,4));
 
-        return new AuthResult(user, accessToken, refreshToken);
+        // access 토큰 만료까지 남은 시간
+        long expiresIn = jwtTokenProvider.getRemainingSeconds(accessToken);
+        // 서버 시간
+        long serverTime = System.currentTimeMillis();
+
+        return new AuthResult(user, accessToken, refreshToken, expiresIn, serverTime);
     }
 
     // 현재 기기에서 로그아웃(RefreshToken 삭제)
@@ -141,7 +146,12 @@ public class AuthService {
         User user = tokenInDb.getUser();
         String newAccessToken = jwtTokenProvider.createAccessToken(user);
 
+        // access 토큰 만료까지 남은 시간
+        long expiresIn = jwtTokenProvider.getRemainingSeconds(newAccessToken);
+        // 서버 시간
+        long serverTime = System.currentTimeMillis();
+
         // 필요 시 refreshToken 재발급
-        return new AuthResult(user, newAccessToken, refreshToken);
+        return new AuthResult(user, newAccessToken, refreshToken, expiresIn, serverTime);
     }
 }
