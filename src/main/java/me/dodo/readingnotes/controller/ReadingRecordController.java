@@ -75,14 +75,15 @@ public class ReadingRecordController {
     // Page로 반환하므로 관련된 메타데이터도 따로 전달됨.
     public Page<ReadingRecordResponse> getMyRecords(
             HttpServletRequest request,
-            @PageableDefault(size = 10, sort = "recordedAt", direction = Sort.Direction.DESC) Pageable pageable,
+            @PageableDefault(size = 10, direction = Sort.Direction.DESC) Pageable pageable,
+            @RequestParam(value = "scope", defaultValue = "titleAndAuthor") String scope,
             @RequestParam(value = "q", required = false) String q
     ) {
         String accessToken = jwtTokenProvider.extractToken(request);
         jwtTokenProvider.assertValid(accessToken);
         Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
 
-        Page<ReadingRecord> page = service.getMyRecords(userId, q, pageable);
+        Page<ReadingRecord> page = service.getMyRecords(userId, scope, q, pageable);
         return page.map(ReadingRecordResponse::new);
     }
 

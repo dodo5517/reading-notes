@@ -141,11 +141,14 @@ public class ReadingRecordService {
         return readingRecordRepository.findLatestByUser(userId, pr);
     }
 
-    // 해당 유저의 모든 기록 조회
-    public Page<ReadingRecord> getMyRecords(Long userId, String q, Pageable pageable) {
+    // 해당 유저의 모든 기록 조회(제목/작가 or 문장/코멘트 로 검색)
+    public Page<ReadingRecord> getMyRecords(Long userId, String scope, String q, Pageable pageable) {
         // q가 비어있으면 null로 전달 → 쿼리에서 전체 조회 + 최신순 정렬(Pageable)
         String normalizedQ = (q != null && !q.trim().isEmpty()) ? q.trim() : null;
-        return readingRecordRepository.findMyRecordsByQ(userId, normalizedQ, pageable);
+        if ("titleAndAuthor".equalsIgnoreCase(scope)) {
+            return readingRecordRepository.findMyRecordsByBook(userId, normalizedQ, pageable);
+        }
+        return readingRecordRepository.findMyRecordsByText(userId, normalizedQ, pageable);
     }
 
     // 해당 유저의 매칭 끝난 책 리스트 조회

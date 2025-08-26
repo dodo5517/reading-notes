@@ -21,31 +21,62 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     @EntityGraph(attributePaths = "book")
     Optional<ReadingRecord> findByIdAndUserId(Long recordId, Long userId);
 
-    // 해당 유저의 모든 기록 불러오기
+    // 해당 유저의 모든 기록 불러오기(제목/작가 or 문장/코멘트 로 검색)
+    // 1) 제목/작가 검색
     @Query(
             value = """
-            select rr
-            from ReadingRecord rr
-            left join fetch rr.book b
-            where rr.user.id = :userId
-              and (
-                    :q is null or :q = ''
-                 or lower(rr.sentence) like lower(concat('%', :q, '%'))
-                 or lower(rr.comment)  like lower(concat('%', :q, '%'))
-              )
-            """,
+    select rr
+    from ReadingRecord rr
+    join fetch rr.book b
+    where rr.user.id = :userId
+      and (
+            :q is null or :q = ''
+         or lower(b.title)  like lower(concat('%', :q, '%'))
+         or lower(b.author) like lower(concat('%', :q, '%'))
+      )
+    """,
             countQuery = """
-            select count(rr)
-            from ReadingRecord rr
-            where rr.user.id = :userId
-              and (
-                    :q is null or :q = ''
-                 or lower(rr.sentence) like lower(concat('%', :q, '%'))
-                 or lower(rr.comment)  like lower(concat('%', :q, '%'))
-              )
-            """
+    select count(rr)
+    from ReadingRecord rr
+    join rr.book b
+    where rr.user.id = :userId
+      and (
+            :q is null or :q = ''
+         or lower(b.title)  like lower(concat('%', :q, '%'))
+         or lower(b.author) like lower(concat('%', :q, '%'))
+      )
+    """
     )
-    Page<ReadingRecord> findMyRecordsByQ(@Param("userId") Long userId, @Param("q") String q, Pageable pageable);
+    Page<ReadingRecord> findMyRecordsByBook(@Param("userId") Long userId,
+                                            @Param("q") String q,
+                                            Pageable pageable);
+    // 2) 문장/코멘트로 검색
+    @Query(
+            value = """
+    select rr
+    from ReadingRecord rr
+    left join fetch rr.book b
+    where rr.user.id = :userId
+      and (
+            :q is null or :q = ''
+         or lower(rr.sentence) like lower(concat('%', :q, '%'))
+         or lower(rr.comment)  like lower(concat('%', :q, '%'))
+      )
+    """,
+            countQuery = """
+    select count(rr)
+    from ReadingRecord rr
+    where rr.user.id = :userId
+      and (
+            :q is null or :q = ''
+         or lower(rr.sentence) like lower(concat('%', :q, '%'))
+         or lower(rr.comment)  like lower(concat('%', :q, '%'))
+      )
+    """
+    )
+    Page<ReadingRecord> findMyRecordsByText(@Param("userId") Long userId,
+                                            @Param("q") String q,
+                                            Pageable pageable);
 
     // 해당 유저의 특정 책 찾기
     @Query("""
