@@ -34,6 +34,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
          or lower(b.title)  like lower(concat('%', :q, '%'))
          or lower(b.author) like lower(concat('%', :q, '%'))
       )
+      order by rr.recordedAt desc, rr.id desc
     """,
             countQuery = """
     select count(rr)
@@ -45,6 +46,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
          or lower(b.title)  like lower(concat('%', :q, '%'))
          or lower(b.author) like lower(concat('%', :q, '%'))
       )
+      order by rr.recordedAt desc, rr.id desc
     """
     )
     Page<ReadingRecord> findMyRecordsByBook(@Param("userId") Long userId,
