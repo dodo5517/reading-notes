@@ -27,13 +27,14 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
             value = """
     select rr
     from ReadingRecord rr
-    join fetch rr.book b
+    left join fetch rr.book b
     where rr.user.id = :userId
       and (
             :q is null or :q = ''
          or lower(b.title)  like lower(concat('%', :q, '%'))
          or lower(b.author) like lower(concat('%', :q, '%'))
       )
+      order by rr.recordedAt desc, rr.id desc
     """,
             countQuery = """
     select count(rr)
@@ -62,6 +63,7 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
          or lower(rr.sentence) like lower(concat('%', :q, '%'))
          or lower(rr.comment)  like lower(concat('%', :q, '%'))
       )
+      order by rr.recordedAt desc, rr.id desc
     """,
             countQuery = """
     select count(rr)
