@@ -25,29 +25,28 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     // 1) 제목/작가 검색
     @Query(
             value = """
-    select rr
-    from ReadingRecord rr
-    left join fetch rr.book b
-    where rr.user.id = :userId
-      and (
-            :q is null or :q = ''
-         or lower(b.title)  like lower(concat('%', :q, '%'))
-         or lower(b.author) like lower(concat('%', :q, '%'))
-      )
-      order by rr.recordedAt desc, rr.id desc
-    """,
-            countQuery = """
-    select count(rr)
-    from ReadingRecord rr
-    join rr.book b
-    where rr.user.id = :userId
-      and (
-            :q is null or :q = ''
-         or lower(b.title)  like lower(concat('%', :q, '%'))
-         or lower(b.author) like lower(concat('%', :q, '%'))
-      )
-      order by rr.recordedAt desc, rr.id desc
-    """
+        select rr
+        from ReadingRecord rr
+        left join fetch rr.book b
+        where rr.user.id = :userId
+          and (
+                :q is null or :q = ''
+             or lower(b.title)  like lower(concat('%', :q, '%'))
+             or lower(b.author) like lower(concat('%', :q, '%'))
+          )
+          order by rr.recordedAt desc, rr.id desc
+        """,
+        countQuery = """
+        select count(rr)
+        from ReadingRecord rr
+        join rr.book b
+        where rr.user.id = :userId
+          and (
+                :q is null or :q = ''
+             or lower(b.title)  like lower(concat('%', :q, '%'))
+             or lower(b.author) like lower(concat('%', :q, '%'))
+          )
+        """
     )
     Page<ReadingRecord> findMyRecordsByBook(@Param("userId") Long userId,
                                             @Param("q") String q,
@@ -55,27 +54,27 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
     // 2) 문장/코멘트로 검색
     @Query(
             value = """
-    select rr
-    from ReadingRecord rr
-    left join fetch rr.book b
-    where rr.user.id = :userId
-      and (
-            :q is null or :q = ''
-         or lower(rr.sentence) like lower(concat('%', :q, '%'))
-         or lower(rr.comment)  like lower(concat('%', :q, '%'))
-      )
-      order by rr.recordedAt desc, rr.id desc
-    """,
+        select rr
+        from ReadingRecord rr
+        left join fetch rr.book b
+        where rr.user.id = :userId
+          and (
+                :q is null or :q = ''
+             or lower(rr.sentence) like lower(concat('%', :q, '%'))
+             or lower(rr.comment)  like lower(concat('%', :q, '%'))
+          )
+          order by rr.recordedAt desc, rr.id desc
+        """,
             countQuery = """
-    select count(rr)
-    from ReadingRecord rr
-    where rr.user.id = :userId
-      and (
-            :q is null or :q = ''
-         or lower(rr.sentence) like lower(concat('%', :q, '%'))
-         or lower(rr.comment)  like lower(concat('%', :q, '%'))
-      )
-    """
+        select count(rr)
+        from ReadingRecord rr
+        where rr.user.id = :userId
+          and (
+                :q is null or :q = ''
+             or lower(rr.sentence) like lower(concat('%', :q, '%'))
+             or lower(rr.comment)  like lower(concat('%', :q, '%'))
+          )
+        """
     )
     Page<ReadingRecord> findMyRecordsByText(@Param("userId") Long userId,
                                             @Param("q") String q,
