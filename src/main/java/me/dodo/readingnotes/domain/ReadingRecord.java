@@ -25,6 +25,7 @@ public class ReadingRecord {
     // 관계: 유저
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name= "user_id", nullable = false) // 외래키 user_id
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE) // CASCADE 설정
     private User user;
 
     private String sentence;

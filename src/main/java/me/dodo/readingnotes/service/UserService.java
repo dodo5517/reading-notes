@@ -161,15 +161,14 @@ public class UserService {
     }
 
     // 유저 삭제
-    public String deleteUserById(Long id) {
+    public boolean deleteUserById(Long id) {
         User user = userRepository.findById(id)
                 .orElseThrow(()-> new IllegalArgumentException("해당 ID의 유저가 없습니다."));
         // 삭제
-        user.setIsDeleted(true);
-        userRepository.save(user);
+        userRepository.delete(user);
 
         // 삭제 완료 메시지
-        log.info("is_deleted:" + user.getIsDeleted());
-        return "탈퇴 처리가 완료되었습니다.";
+        log.info("Deleted:" + user.getEmail());
+        return true;
     }
 }

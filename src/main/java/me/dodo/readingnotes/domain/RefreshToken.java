@@ -16,6 +16,7 @@ public class RefreshToken {
 
     @ManyToOne(fetch = FetchType.LAZY) // LAZY: 지연 로딩
     @JoinColumn(name = "user_id", nullable = false)
+    @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE) // CASCADE 설정
     private User user;
 
     @Column(nullable = false, unique = true, length = 512)

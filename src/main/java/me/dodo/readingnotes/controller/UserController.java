@@ -31,15 +31,13 @@ public class UserController {
     private final S3Service s3Service;
     private final JwtTokenProvider jwtTokenProvider;
     private static final Logger log = LoggerFactory.getLogger(UserController.class);
-    private final UserRepository userRepository;
 
     public UserController(UserService userService,
                           S3Service s3Service,
-                          JwtTokenProvider jwtTokenProvider, UserRepository userRepository) {
+                          JwtTokenProvider jwtTokenProvider) {
             this.userService = userService; // controller에 service 의존성 주입
             this.s3Service = s3Service;
             this.jwtTokenProvider = jwtTokenProvider;
-            this.userRepository = userRepository;
     }
 
     // post(일반 회원가입)
@@ -173,6 +171,16 @@ public class UserController {
             userResponses.add(new UserResponse(user));
         }
         return userResponses;
+    }
+
+    // 유저 탈퇴
+    @DeleteMapping("/delete")
+    public Boolean deleteUser(HttpServletRequest request){
+        String accessToken = jwtTokenProvider.extractToken(request);
+        jwtTokenProvider.assertValid(accessToken);
+        Long userId = jwtTokenProvider.getUserIdFromToken(accessToken);
+
+        return userService.deleteUserById(userId);
     }
 
 }

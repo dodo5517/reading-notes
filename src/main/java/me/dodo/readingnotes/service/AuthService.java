@@ -45,7 +45,7 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
-        if(user.getIsDeleted()){
+        if(user.getUserStatus() != User.UserStatus.ACTIVE){
             throw new IllegalArgumentException("탈퇴한 계정입니다.");
         }
         if(!passwordEncoder.matches(password,user.getPassword())){ // 평문 비교가 아닌 해시 비교

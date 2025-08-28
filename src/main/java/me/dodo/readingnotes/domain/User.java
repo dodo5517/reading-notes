@@ -35,8 +35,9 @@ public class User {
     @Column(name = "profile_image_url", length = 500)
     private String profileImageUrl; // 프로필 사진
 
-    @Column(name = "is_deleted", nullable = false)
-    private Boolean isDeleted = false; // 탈퇴 여부, 기본값 = false
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_status", nullable = false)
+    private UserStatus userStatus = UserStatus.ACTIVE; // 차단/활동 여부, 기본값 = ACTIVE
 
     @Column(nullable = false, length = 20)
     private String role = "USER"; // 역할(권한)
@@ -49,6 +50,8 @@ public class User {
     @Column(name = "updated_at", nullable = false)
     private LocalDateTime updatedAt; // 수정된 시간
 
+
+    public enum UserStatus { ACTIVE, BLOCKED, SUSPENDED }
 
     // 기본 생성자(JPA 필수)
     public User(){
@@ -121,12 +124,8 @@ public class User {
         this.profileImageUrl = profileImageUrl;
     }
 
-    public Boolean getIsDeleted() {
-        return isDeleted;
-    }
-    public void setIsDeleted(Boolean isDeleted) {
-        this.isDeleted = isDeleted;
-    }
+    public UserStatus getUserStatus() { return userStatus; }
+    public void setUserStatus(UserStatus userStatus) { this.userStatus = userStatus; }
 
     public String getRole() { return role; }
     public void setRole(String role) { this.role = role; }
@@ -152,7 +151,7 @@ public class User {
         user.setProvider(provider);
         user.setProviderId(providerId);
         user.setApiKey(apiKey);
-        user.setRole("ROLE_USER");
+        user.setRole("USER");
         return user;
     }
 
