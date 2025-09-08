@@ -18,7 +18,6 @@ public class DeviceInfoParser {
         String osName = os != null ? os.getName() : "Unknown OS"; // Android, iOS 등
         String deviceType = os != null ? os.getDeviceType().getName() : "Unknown DeviceType"; // Mobile, Tablet, Computer 등
         String browserName = browser != null ? browser.getName() : "Unknown Browser";
-//        String browserVer = browserVersion != null ? browserVersion.getVersion() : "Unknown Browser Version";
 
         return String.format("%s / %s / %s", osName, deviceType, browserName);
     }

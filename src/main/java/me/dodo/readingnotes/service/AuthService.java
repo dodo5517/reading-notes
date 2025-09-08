@@ -15,8 +15,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZoneId;
-import java.util.Date;
-import java.util.Optional;
+import java.time.LocalDateTime;
 
 @Service
 public class AuthService {
@@ -61,36 +60,13 @@ public class AuthService {
         String accessToken = jwtTokenProvider.createAccessToken(user);
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
-        // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
-//        log.debug("accessToken: {}", accessToken.substring(0,4));
 
-        // 기존 토큰 존재 여부 확인
-        Optional<RefreshToken> existingToken = refreshTokenRepository.findByUserIdAndDeviceInfo(user.getId(), deviceInfo);
+        // refresh 토큰 만료 시간의 Date 타입을 LocalDateTime으로 변환(로그인 하는 시점에 지정하므로 공통부분임)
+        LocalDateTime refreshExpiry = jwtTokenProvider.getExpirationDate(refreshToken)
+                .toInstant().atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime();
 
-        RefreshToken tokenEntity;
-        // refresh 토큰 만료 시간
-        Date refreshExpiry = jwtTokenProvider.getExpirationDate(refreshToken);
-
-        // 기존에 토큰이 존재한다면 update
-        if(existingToken.isPresent()){
-            tokenEntity = existingToken.get(); // 기존 토큰 수정
-            tokenEntity.setToken(refreshToken);
-        } else { // 기존 토큰이 없다면 insert
-            tokenEntity = new RefreshToken();
-            tokenEntity.setUser(user);
-            tokenEntity.setToken(refreshToken);
-        }
-
-        // Date 타입을 LocalDateTime으로 변환(로그인 하는 시점에 지정하므로 공통부분임)
-        tokenEntity.setExpiryDate(refreshExpiry.toInstant()
-                .atZone(ZoneId.of("Asia/Seoul")).toLocalDateTime());
-        tokenEntity.setDeviceInfo(deviceInfo);
-
-        // DB에 저장(update or insert)
-        refreshTokenRepository.save(tokenEntity);
-
-        // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
-//        log.debug("refreshToken: {}", tokenEntity.getToken().substring(0,4));
+        // DB에 저장(쿼리에서 update or insert)
+        refreshTokenRepository.upsert(user.getId(), deviceInfo, refreshToken, refreshExpiry);
 
         // access 토큰 만료까지 남은 시간
         long expiresIn = jwtTokenProvider.getRemainingSeconds(accessToken);
