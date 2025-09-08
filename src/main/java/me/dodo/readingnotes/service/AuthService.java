@@ -45,8 +45,8 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(()->new IllegalArgumentException("존재하지 않는 이메일입니다."));
 
-        if(user.getUserStatus() != User.UserStatus.ACTIVE){
-            throw new IllegalArgumentException("탈퇴한 계정입니다.");
+        if(user.getUserStatus() == User.UserStatus.BLOCKED){
+            throw new IllegalArgumentException("차단된 계정입니다.");
         }
         if(!passwordEncoder.matches(password,user.getPassword())){ // 평문 비교가 아닌 해시 비교
             throw new IllegalArgumentException("비밀번호가 일치하지 않습니다.");
@@ -62,7 +62,7 @@ public class AuthService {
         String refreshToken = jwtTokenProvider.createRefreshToken();
 
         // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
-        log.debug("accessToken: {}", accessToken.substring(0,4));
+//        log.debug("accessToken: {}", accessToken.substring(0,4));
 
         // 기존 토큰 존재 여부 확인
         Optional<RefreshToken> existingToken = refreshTokenRepository.findByUserIdAndDeviceInfo(user.getId(), deviceInfo);
@@ -90,7 +90,7 @@ public class AuthService {
         refreshTokenRepository.save(tokenEntity);
 
         // 실서비스에서는 토큰 로그는 절대 기록하지 않는 게 원칙. 남기더라도 debug 레벨 + redaction 시스템 필요
-        log.debug("refreshToken: {}", tokenEntity.getToken().substring(0,4));
+//        log.debug("refreshToken: {}", tokenEntity.getToken().substring(0,4));
 
         // access 토큰 만료까지 남은 시간
         long expiresIn = jwtTokenProvider.getRemainingSeconds(accessToken);
