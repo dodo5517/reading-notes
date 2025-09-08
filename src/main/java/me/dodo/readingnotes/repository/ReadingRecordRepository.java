@@ -160,12 +160,14 @@ public interface ReadingRecordRepository extends JpaRepository<ReadingRecord, Lo
 
     // Day 목록
     @Query("""
-        select cast(r.recordedAt as date) as day, count(r) as cnt
+        select
+           function('strftime', '%Y-%m-%d', r.recordedAt) as day,
+           count(r) as cnt
         from ReadingRecord r
         where r.user.id = :userId
           and r.recordedAt >= :start and r.recordedAt < :end
-        group by cast(r.recordedAt as date)
-        order by cast(r.recordedAt as date) asc
+        group by function('strftime', '%Y-%m-%d', r.recordedAt)
+        order by function('strftime', '%Y-%m-%d', r.recordedAt) asc
         """)
     List<DayCountRow> countByDayInRange(@Param("userId") Long userId,
                                         @Param("start") LocalDateTime start,

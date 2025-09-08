@@ -43,7 +43,8 @@ public class ReadingCalendarService {
         List<DayStat> days = new ArrayList<>();
         long totalRecords = 0;
         for (DayCountRow r : rows) {
-            days.add(new DayStat(r.getDay(), r.getCnt()));
+            LocalDate d = LocalDate.parse(r.getDay()); // "YYYY-MM-DD"
+            days.add(new DayStat(d, r.getCnt()));
             totalRecords += r.getCnt();
         }
 
