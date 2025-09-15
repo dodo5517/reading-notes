@@ -67,6 +67,11 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         // DB에 refreshToken 저장
         refreshTokenRepository.upsert(user.getId(), deviceInfo, refreshToken, refreshExpiry);
 
+        // access 토큰 만료까지 남은 시간
+        long expiresIn = jwtTokenProvider.getRemainingSeconds(accessToken);
+        // 서버 시간
+        long serverTime = System.currentTimeMillis();
+
         // refreshToken → HttpOnly 쿠키로 저장
         ResponseCookie refreshCookie = CookieUtil.createRefreshTokenCookie(refreshToken, false);
 
@@ -74,7 +79,8 @@ public class OAuth2SuccessHandler implements AuthenticationSuccessHandler {
         response.addHeader("Set-Cookie", refreshCookie.toString());
 
         // 프론트로 accessToken과 함께 리디렉션
-        String redirectUrl = "https://www.kimdohyeon.dev/oauth/callback?accessToken=" + accessToken;
+        String redirectUrl = "http://localhost:3000/oauth/callback?accessToken=" + accessToken
+                + "&expiresIn" + expiresIn + "&serverTime" + serverTime;
         response.sendRedirect(redirectUrl);
     }
 }

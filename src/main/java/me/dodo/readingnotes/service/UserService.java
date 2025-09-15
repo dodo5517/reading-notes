@@ -25,7 +25,7 @@ public class UserService {
     private final S3Service s3Service;
 
     @Autowired
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenRepository refreshTokenRepositorys, RefreshTokenRepository refreshTokenRepository, S3Service s3Service) {
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, JwtTokenProvider jwtTokenProvider, RefreshTokenRepository refreshTokenRepository, S3Service s3Service) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.s3Service = s3Service;
@@ -51,7 +51,7 @@ public class UserService {
         // api_key
         user.setApiKey(ApiKeyGenerator.generate()); // api_key 생성
         if (user.getApiKey() != null){
-            log.info("api_key:" + user.getApiKey().substring(0,8));
+//            log.info("api_key:" + user.getApiKey().substring(0,8));
         } else{
             log.warn("api_key가 null임.");
         }

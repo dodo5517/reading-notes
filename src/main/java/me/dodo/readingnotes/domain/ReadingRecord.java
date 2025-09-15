@@ -28,13 +28,15 @@ public class ReadingRecord {
     @org.hibernate.annotations.OnDelete(action = org.hibernate.annotations.OnDeleteAction.CASCADE) // CASCADE 설정
     private User user;
 
+    @Column(length = 1000)
     private String sentence;
+    @Column(length = 1000)
     private String comment;
 
     // 매칭 전 임시 원문 보관
-    @Column(name = "raw_title", nullable = true)
+    @Column(name = "raw_title", nullable = true, length = 255)
     private String rawTitle;
-    @Column(name = "raw_author", nullable = true)
+    @Column(name = "raw_author", nullable = true, length = 255)
     private String rawAuthor;
 
     @Enumerated(EnumType.STRING)
@@ -59,6 +61,7 @@ public class ReadingRecord {
     public ReadingRecord() {
     }
 
+    // entity가 db에 insert 되기 전에 호출됨.
     @PrePersist
     public void prePersist() {
         if (recordedAt == null) recordedAt = LocalDateTime.now();

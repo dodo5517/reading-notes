@@ -94,7 +94,7 @@ public class CustomOAuth2UserService implements
         // api_key 생성
         String api_key = ApiKeyGenerator.generate();
         if (api_key != null){
-            log.info("api_key:" + api_key.substring(0,8));
+//            log.info("api_key:" + api_key.substring(0,8));
         } else{
             log.warn("api_key가 null임.");
         }

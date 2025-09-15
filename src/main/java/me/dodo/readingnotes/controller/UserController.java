@@ -162,16 +162,16 @@ public class UserController {
         return ResponseEntity.ok(new ApiKeyResponse("API Key 조회 성공", apiKey));
     }
     
-    // 모든 유저 조희
-    @GetMapping
-    public List<UserResponse> getAllUsers(){
-        List<User> users = userService.findAllUsers();
-        List<UserResponse> userResponses = new ArrayList<>();
-        for (User user : users) {
-            userResponses.add(new UserResponse(user));
-        }
-        return userResponses;
-    }
+    // 모든 유저 조희 (관리자만 볼 실행할 수 있도록 수정해야 함.)
+//    @GetMapping("/all")
+//    public List<UserResponse> getAllUsers(){
+//        List<User> users = userService.findAllUsers();
+//        List<UserResponse> userResponses = new ArrayList<>();
+//        for (User user : users) {
+//            userResponses.add(new UserResponse(user));
+//        }
+//        return userResponses;
+//    }
 
     // 유저 탈퇴
     @DeleteMapping("/delete")

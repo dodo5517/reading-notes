@@ -50,7 +50,7 @@ public class KakaoBookClient implements BookSearchClient {
 
         if (resp == null || resp.documents == null) return List.of();
 
-        log.debug("Kakao API response: {}", resp.documents.toString());
+//        log.debug("Kakao API response: {}", resp.documents.toString());
 
         // BookCandidate로 변환
         return resp.documents.stream()

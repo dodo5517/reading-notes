@@ -40,14 +40,15 @@ public class ReadingRecordController {
 
     // 아이폰 단축어로 메모 추가
     @PostMapping
-    public ResponseEntity<Long> create(HttpServletRequest request,
+    public ResponseEntity<String> create(HttpServletRequest request,
                                        @RequestBody ReadingRecordRequest req) {
         Long userId = (Long) request.getAttribute(ApiKeyFilter.ATTR_API_USER_ID);
         if (userId == null) {
             return ResponseEntity.status(401).build(); // 필터가 보통 막지만 방어
         }
+        log.debug("Create Record, userID={}", userId);
         ReadingRecord saved = service.createByUserId(userId, req);
-        return ResponseEntity.ok(saved.getId());
+        return ResponseEntity.ok("문장: "+saved.getSentence()+"\n메모: "+saved.getComment()+"\n"+"기록을 저장했습니다.");
     }
 
     // 해당 유저의 최근 N(default=3)개 기록 조회(메인 화면용)
