@@ -19,7 +19,7 @@
 
 ## 아이폰 단축어 파일
 
-Readory 단축어[https://dodo5517.tistory.com/173]
+[Readory 단축어](https://dodo5517.tistory.com/173)
 
 ---
 
