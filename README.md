@@ -1,8 +1,11 @@
 # Readory Backend
 
-> **Readory (Reading + Memory)**  
+> **Readory (Reading + Memory)**   
 > 아이폰 단축어를 통해 책의 문장과 감상을 웹에 자동으로 기록하는 독서 기록 서비스  
 > 사용자는 단축어를 실행하는 것만으로 손쉽게 자신의 독서 노트를 웹에 저장할 수 있습니다.
+
+> **기간:** 2025.07.28 ~ 2025.08.29  
+> **개인 프로젝트**  
 
  **관련 저장소**
 - [Readory Front (React)](https://github.com/dodo5517/readory-front)
